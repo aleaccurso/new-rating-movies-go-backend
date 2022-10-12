@@ -1,17 +1,49 @@
 package routers
 
-import "github.com/gin-gonic/gin"
+import (
+	"new-rating-movies-go-backend/controllers"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+)
 
 type Router struct {
 	engine         *gin.Engine
-	authMiddleware middlewares.IAuthMiddleware
 	controller     controllers.Controller
 }
 
-func Initialise(engine *gin.Engine, authMiddleware middlewares.IAuthMiddleware, controller controllers.Controller) Router {
+func Initialise(engine *gin.Engine, controller controllers.Controller) Router {
 	return Router{
 		engine:         engine,
-		authMiddleware: authMiddleware,
 		controller:     controller,
 	}
+}
+
+func (router Router) Run() error {
+
+	// Setup CORS
+	router.engine.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"*"},
+		AllowHeaders:     []string{"*"},
+		ExposeHeaders:    []string{"*"},
+		AllowCredentials: true,
+	}))
+
+	// Creates the api-group
+	api := router.engine.Group("")
+
+	////////////////////////////////////////
+	//     Initialises all the routers    //
+	////////////////////////////////////////
+
+	api.GET("/users", router.controller.UserController.GetUsers)
+	api.GET("/users/:userId", router.controller.UserController.GetUserById)
+
+	// Runs the engine
+	if err := router.engine.Run(); err != nil {
+		return err
+	}
+
+	return nil
 }

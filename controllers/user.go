@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"new-rating-movies-go-backend/usecases"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,10 +15,10 @@ func InitialiseUserController(usecases usecases.Usecase) UserController {
 	return UserController{usecases: usecases}
 }
 
-func GetUsers(context *gin.Context) {
+func (controller UserController) GetUsers(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, gin.H{"message": "UserController - GetUsers"})
 }
 
-func GetUserById(context *gin.Context) {
+func (controller UserController) GetUserById(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, gin.H{"message": "UserController - GetUserById"})
 }
