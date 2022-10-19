@@ -31,7 +31,7 @@ func (router Router) Run() error {
 	}))
 
 	// Creates the api-group
-	api := router.engine.Group("")
+	api := router.engine.Group("/api")
 
 	////////////////////////////////////////
 	//     Initialises all the routers    //
@@ -41,7 +41,7 @@ func (router Router) Run() error {
 	api.GET("/users/:userId", router.controller.UserController.GetUserById)
 
 	// Runs the engine
-	if err := router.engine.Run(); err != nil {
+	if err := router.engine.Run(":8010"); err != nil {
 		return err
 	}
 
