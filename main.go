@@ -1,17 +1,22 @@
 package main
 
 import (
+<<<<<<< HEAD
 	"fmt"
 	"new-rating-movies-go-backend/controllers"
 	"new-rating-movies-go-backend/database"
 	"new-rating-movies-go-backend/repositories"
 	"new-rating-movies-go-backend/routers"
 	"new-rating-movies-go-backend/usecases"
+=======
+	"new-rating-movies-go-backend/controllers"
+>>>>>>> 93ddb8e (Postman request ok - GetUsers - GetUserById)
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+<<<<<<< HEAD
 	if err := run(); err != nil {
 		fmt.Println(err)
 	}
@@ -42,4 +47,12 @@ func run() error {
 	}
 
 	return nil
+=======
+	router := gin.Default()
+
+	router.GET("/api/users", controllers.GetUsers)
+	router.GET("/api/users/:id", controllers.GetUserById)
+
+	router.Run("localhost:8080")
+>>>>>>> 93ddb8e (Postman request ok - GetUsers - GetUserById)
 }
