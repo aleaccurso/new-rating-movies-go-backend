@@ -1,13 +1,15 @@
 package repositories
 
-import "gorm.io/gorm"
+import (
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
 type Repository struct {
-	database       *gorm.DB
+	database       *mongo.Database
 	UserRepository UserRepository
 }
 
-func Initialise(database *gorm.DB) Repository {
+func Initialise(database *mongo.Database) Repository {
 	return Repository{
 		database:       database,
 		UserRepository: InitialiseUserRepository(database),
