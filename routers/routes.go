@@ -8,14 +8,14 @@ import (
 )
 
 type Router struct {
-	engine         *gin.Engine
-	controller     controllers.Controller
+	engine     *gin.Engine
+	controller controllers.Controller
 }
 
 func Initialise(engine *gin.Engine, controller controllers.Controller) Router {
 	return Router{
-		engine:         engine,
-		controller:     controller,
+		engine:     engine,
+		controller: controller,
 	}
 }
 

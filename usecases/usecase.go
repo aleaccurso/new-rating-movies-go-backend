@@ -8,6 +8,6 @@ type Usecase struct {
 
 func Initialise(repository repositories.Repository) Usecase {
 	return Usecase{
-			UserUsecase: InitialiseUserUsecase(repository),
+		UserUsecase: InitialiseUserUsecase(repository),
 	}
 }
