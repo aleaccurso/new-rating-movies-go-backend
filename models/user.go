@@ -7,15 +7,15 @@ import (
 )
 
 type User struct {
-	Id         bson.ObjectId `bson:"_id" json:"id"`
-	CreatedAt  time.Time     `json:"createdAt"`
-	UpdatedAt  time.Time     `json:"updatedAt"`
-	Nickname   string        `json:"nickname"`
-	Email      string        `json:"email"`
-	Password   string        `json:"password"`
-	IsAdmin    bool          `json:"is_admin"`
-	Favorites  []int32       `json:"my_favorites"`
-	Rates      []Rate        `json:"my_rates"`
-	Language   string        `json:"language"`
-	ProfilePic string        `json:"profile_pic"`
+	Id         bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	CreatedAt  time.Time     `bson:"created_at,omitempty" json:"created_at"`
+	UpdatedAt  time.Time     `bson:"updated_at,omitempty" json:"updated_at"`
+	Nickname   string        `bson:"nickname,omitempty" json:"nickname"`
+	Email      string        `bson:"email,omitempty" json:"email"`
+	Password   string        `bson:"password,omitempty" json:"password"`
+	IsAdmin    bool          `bson:"is_admin,omitempty" json:"is_admin"`
+	Favorites  []int32       `bson:"my_favorites,omitempty" json:"my_favorites"`
+	Rates      []Rate        `bson:"my_rates,omitempty" json:"my_rates"`
+	Language   string        `bson:"language,omitempty" json:"language"`
+	ProfilePic string        `bson:"profile_pic,omitempty" json:"profile_pic"`
 }

@@ -1,17 +1,17 @@
 package repositories
 
 import (
-	"go.mongodb.org/mongo-driver/mongo"
+	"new-rating-movies-go-backend/database"
 )
 
 type Repository struct {
-	database       *mongo.Database
-	UserRepository UserRepository
+	RepositoryBase
 }
 
-func Initialise(database *mongo.Database) Repository {
+func Initialise(database *database.Database) Repository {
 	return Repository{
-		database:       database,
-		UserRepository: InitialiseUserRepository(database),
+		RepositoryBase: RepositoryBase{
+			UserRepository: InitialiseUserRepository(database),
+		},
 	}
 }

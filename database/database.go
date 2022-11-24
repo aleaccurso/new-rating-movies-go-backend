@@ -10,7 +10,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func Initialise() (*mongo.Database, error) {
+type Database struct {
+	Users  *mongo.Collection
+	Movies *mongo.Collection
+}
+
+func Initialise() (*Database, error) {
 
 	if err := godotenv.Load(); err != nil {
 		return nil, fmt.Errorf("database: No .env file found")
@@ -20,39 +25,37 @@ func Initialise() (*mongo.Database, error) {
 	uri := os.Getenv("MONGODB_URI")
 
 	if uri == "" {
-		return nil, fmt.Errorf("database: You must set your 'MONGODB_URI' environmental variable")
+		return nil, fmt.Errorf("Database: You must set your 'MONGODB_URI' environmental variable")
 		// log.Fatal("You must set your 'MONGODB_URI' environmental variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
 	}
 
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	ctx := context.TODO()
+
+	opt := options.Client().ApplyURI(uri)
+	client, err := mongo.Connect(ctx, opt)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("Database: Cannot connect to DB")
 	}
 	defer func() {
-		if err := client.Disconnect(context.TODO()); err != nil {
-			panic(err)
+		if err := client.Disconnect(ctx); err != nil {
+			fmt.Println("Error:", err)
 		}
 	}()
 
+	// Check the connection
+	// err = client.Ping(ctx, nil)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
 	db := client.Database("newRatingMovies")
+	usersCollection := db.Collection("users")
+	moviesCollection := db.Collection("movies")
 
 	fmt.Println("Connected to database")
 
-	return db, nil
-
-	// title := "Back to the Future"
-	// var result bson.M
-	// err = coll.FindOne(context.TODO(), bson.D{{"title", title}}).Decode(&result)
-	// if err == mongo.ErrNoDocuments {
-	// 	fmt.Printf("No document was found with the title %s\n", title)
-	// 	return
-	// }
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// jsonData, err := json.MarshalIndent(result, "", "    ")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Printf("%s\n", jsonData)
+	return &Database{
+		Users:  usersCollection,
+		Movies: moviesCollection,
+	}, nil
 }

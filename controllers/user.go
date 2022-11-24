@@ -1,7 +1,10 @@
 package controllers
 
 import (
+	"context"
+	"errors"
 	"net/http"
+	"new-rating-movies-go-backend/constants"
 	"new-rating-movies-go-backend/usecases"
 
 	"github.com/gin-gonic/gin"
@@ -15,10 +18,42 @@ func InitialiseUserController(usecases usecases.Usecase) UserController {
 	return UserController{usecases: usecases}
 }
 
-func (controller UserController) GetUsers(context *gin.Context) {
-	context.IndentedJSON(http.StatusOK, gin.H{"message": "UserController - GetUsers"})
+func (controller UserController) GetUsers(c *gin.Context) {
+
+	ctx := context.TODO()
+
+	page := c.Query("page")
+	if page == "" {
+		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.MISSING_PARAM+"page").Error())
+		return
+	}
+
+	size := c.Query("size")
+	if size == "" {
+		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.MISSING_PARAM+"size").Error())
+		return
+	}
+
+	users, err := controller.usecases.UserUsecase.GetUsers(ctx, page, size)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, users)
 }
 
-func (controller UserController) GetUserById(context *gin.Context) {
-	context.IndentedJSON(http.StatusOK, gin.H{"message": "UserController - GetUserById"})
+func (controller UserController) GetUserById(c *gin.Context) {
+
+	ctx := context.TODO()
+
+	userId := c.Param("userId")
+
+	users, err := controller.usecases.UserUsecase.GetUserById(ctx, userId)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, users)
 }
