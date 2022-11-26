@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"new-rating-movies-go-backend/controllers"
-	"new-rating-movies-go-backend/database"
+	db "new-rating-movies-go-backend/database"
 	"new-rating-movies-go-backend/repositories"
 	"new-rating-movies-go-backend/routers"
 	"new-rating-movies-go-backend/usecases"
@@ -22,7 +22,7 @@ func run() error {
 	engine := gin.Default()
 
 	// Connects to the database
-	database, err := database.Initialise()
+	database, err := db.Initialise()
 	if err != nil {
 		return fmt.Errorf("router: %s", err)
 	}
@@ -43,6 +43,8 @@ func run() error {
 	if err := router.Run(); err != nil {
 		return fmt.Errorf("router: %s", err)
 	}
+
+	// defer db.CloseConnection(database.Client)
 
 	return nil
 }

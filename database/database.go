@@ -11,6 +11,7 @@ import (
 )
 
 type Database struct {
+	// Client *mongo.Client
 	Users  *mongo.Collection
 	Movies *mongo.Collection
 }
@@ -36,26 +37,44 @@ func Initialise() (*Database, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Database: Cannot connect to DB")
 	}
-	defer func() {
-		if err := client.Disconnect(ctx); err != nil {
-			fmt.Println("Error:", err)
-		}
-	}()
 
 	// Check the connection
-	// err = client.Ping(ctx, nil)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Database: Lost the connection to DB")
+	}
 
 	db := client.Database("newRatingMovies")
 	usersCollection := db.Collection("users")
 	moviesCollection := db.Collection("movies")
 
+	// defer func() {
+	// 	if err := client.Disconnect(ctx); err != nil {
+	// 		fmt.Println("Error:", err)
+	// 	}
+	// }()
+
 	fmt.Println("Connected to database")
 
 	return &Database{
+		// Client: client,
 		Users:  usersCollection,
 		Movies: moviesCollection,
 	}, nil
 }
+
+// func CloseConnection(client *mongo.Client) error {
+// 	if client == nil {
+// 		return errors.New("no connection to disconnect")
+// 	}
+
+// 	err := client.Disconnect(context.TODO())
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	// TODO optional you can log your closed MongoDB client
+// 	fmt.Println("Connection to MongoDB closed.")
+
+// 	return nil
+// }
