@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"new-rating-movies-go-backend/controllers"
-	"new-rating-movies-go-backend/middelwares"
 	db "new-rating-movies-go-backend/database"
+	middlewares "new-rating-movies-go-backend/middelwares"
 	"new-rating-movies-go-backend/repositories"
 	"new-rating-movies-go-backend/routers"
 	"new-rating-movies-go-backend/usecases"
