@@ -26,7 +26,7 @@ func (controller AuthController) Register(c *gin.Context) {
 
 	ctx := context.TODO()
 
-	if errA := c.ShouldBindBodyWith(&userReqCreateDTO, binding.JSON); errA == nil {
+	if err := c.ShouldBindBodyWith(&userReqCreateDTO, binding.JSON); err == nil {
 		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.UNABLE_TO_BIND_BODY).Error())
 		return
 	}

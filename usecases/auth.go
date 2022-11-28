@@ -9,9 +9,8 @@ import (
 	"new-rating-movies-go-backend/dtos"
 	"new-rating-movies-go-backend/enums"
 	"new-rating-movies-go-backend/repositories"
-	"os"
+	"new-rating-movies-go-backend/usecases/mappers"
 
-	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/exp/slices"
 )
@@ -43,7 +42,9 @@ func (usecase AuthUsecase) Register(context context.Context, userDTO dtos.UserRe
 		return nil, err
 	}
 
-	return mappers.UserModelToDTO(user), nil
+	insertedUserDTO := mappers.UserModelToResDTO(*user)
+
+	return &insertedUserDTO, nil
 }
 
 func isEmailValid(email string) bool {
@@ -59,13 +60,13 @@ func getHash(pwd []byte) string {
 	return string(hash)
 }
 
-func generateJWT() (string, error) {
-	secretKey := os.Getenv("JWT_SECRET")
-	token := jwt.New(jwt.SigningMethodHS256)
-	tokenString, err := token.SignedString(secretKey)
-	if err != nil {
-		log.Println("Error in JWT token generation")
-		return "", err
-	}
-	return tokenString, nil
-}
+// func generateJWT() (string, error) {
+// 	secretKey := os.Getenv("JWT_SECRET")
+// 	token := jwt.New(jwt.SigningMethodHS256)
+// 	tokenString, err := token.SignedString(secretKey)
+// 	if err != nil {
+// 		log.Println("Error in JWT token generation")
+// 		return "", err
+// 	}
+// 	return tokenString, nil
+// }
