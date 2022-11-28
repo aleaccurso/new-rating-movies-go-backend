@@ -70,8 +70,11 @@ func (repository UserRepository) GetUserByEmail(context context.Context, email s
 	var user models.User
 
 	err := repository.database.Users.FindOne(context, bson.M{"email": email}).Decode(&user)
-	if err != nil {
+	if err == mongo.ErrNoDocuments {
 		return nil, errors.New(constants.RESOURCE_NOT_FOUND + "user")
+	}
+	if err != nil {
+		return nil, errors.New(constants.SERVER_ERROR)
 	}
 
 	return &user, nil
