@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"new-rating-movies-go-backend/controllers"
+	"new-rating-movies-go-backend/middelwares"
 	db "new-rating-movies-go-backend/database"
 	"new-rating-movies-go-backend/repositories"
 	"new-rating-movies-go-backend/routers"
@@ -36,8 +37,11 @@ func run() error {
 	// Creates the controller container
 	controller := controllers.Initialise(usecase)
 
+	// Creates middlewares
+	middleware := middlewares.Initialise()
+
 	// Creates the routes container
-	router := routers.Initialise(engine, controller)
+	router := routers.Initialise(engine, middleware.middlewares, controller)
 
 	// Start the router
 	if err := router.Run(); err != nil {
