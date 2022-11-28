@@ -2,20 +2,23 @@ package routers
 
 import (
 	"new-rating-movies-go-backend/controllers"
+	middlewares "new-rating-movies-go-backend/middelwares"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 type Router struct {
-	engine     *gin.Engine
-	controller controllers.Controller
+	engine         *gin.Engine
+	authMiddleware middlewares.IAuthMiddleware
+	controller     controllers.Controller
 }
 
-func Initialise(engine *gin.Engine, controller controllers.Controller) Router {
+func Initialise(engine *gin.Engine, authMiddleware middlewares.IAuthMiddleware, controller controllers.Controller) Router {
 	return Router{
-		engine:     engine,
-		controller: controller,
+		engine:         engine,
+		authMiddleware: authMiddleware,
+		controller:     controller,
 	}
 }
 

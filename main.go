@@ -41,7 +41,7 @@ func run() error {
 	middleware := middlewares.Initialise()
 
 	// Creates the routes container
-	router := routers.Initialise(engine, middleware.middlewares, controller)
+	router := routers.Initialise(engine, middleware.AuthMiddleware, controller)
 
 	// Start the router
 	if err := router.Run(); err != nil {
