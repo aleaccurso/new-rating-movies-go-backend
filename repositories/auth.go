@@ -3,11 +3,10 @@ package repositories
 import (
 	"context"
 	"errors"
-	"fmt"
 	"new-rating-movies-go-backend/database"
 	"new-rating-movies-go-backend/dtos"
-	"new-rating-movies-go-backend/models"
-	"reflect"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type AuthRepository struct {
@@ -20,16 +19,17 @@ func InitialiseAuthRepository(db *database.Database) AuthRepository {
 	}
 }
 
-func (repository AuthRepository) AddUser(context context.Context, user dtos.UserReqCreateDTO) (*models.User, error) {
+func (repository AuthRepository) AddUser(context context.Context, user dtos.UserReqCreateDTO) (*primitive.ObjectID, error) {
 
 	result, err := repository.database.Users.InsertOne(context, user)
 	if err != nil {
 		return nil, errors.New("reposiotry/unable-to-register")
 	}
 
-	newID := result.InsertedID
+	newID, ok := result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return nil, errors.New("reposiotry/unable-to-convert-id")
+	}
 
-	fmt.Println("InsertOne() newID:", newID)
-	fmt.Println("InsertOne() newID type:", reflect.TypeOf(newID))
-	return nil, nil
+	return &newID, nil
 }

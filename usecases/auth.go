@@ -3,14 +3,14 @@ package usecases
 import (
 	"context"
 	"errors"
-	"log"
 	"net/mail"
 	"new-rating-movies-go-backend/constants"
 	"new-rating-movies-go-backend/dtos"
 	"new-rating-movies-go-backend/enums"
 	"new-rating-movies-go-backend/repositories"
-	"new-rating-movies-go-backend/usecases/mappers"
 
+	"github.com/samber/lo"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/exp/slices"
 )
@@ -25,7 +25,7 @@ func InitialiseAuthUsecase(repository repositories.Repository) AuthUsecase {
 	}
 }
 
-func (usecase AuthUsecase) Register(context context.Context, userDTO dtos.UserReqCreateDTO) (*dtos.UserResDTO, error) {
+func (usecase AuthUsecase) Register(context context.Context, userDTO dtos.UserReqCreateDTO) (*primitive.ObjectID, error) {
 
 	if !isEmailValid(userDTO.Email) {
 		return nil, errors.New(constants.BAD_DATA + "email")
@@ -35,16 +35,23 @@ func (usecase AuthUsecase) Register(context context.Context, userDTO dtos.UserRe
 		return nil, errors.New(constants.BAD_DATA + "language")
 	}
 
-	userDTO.Password = getHash([]byte(userDTO.Password))
+	hashedPassword, err := getHash([]byte(userDTO.Password))
+	if err != nil {
+		return nil, err
+	}
+	userDTO.Password = *hashedPassword
 
-	user, err := usecase.repository.AuthRepository.AddUser(context, userDTO)
+	user, _ := usecase.repository.UserRepository.GetUserByEmail(context, userDTO.Email)
+	if user != nil {
+		return nil, errors.New(constants.AUTH_EMAIL_EXISTS)
+	}
+
+	newId, err := usecase.repository.AuthRepository.AddUser(context, userDTO)
 	if err != nil {
 		return nil, err
 	}
 
-	insertedUserDTO := mappers.UserModelToResDTO(*user)
-
-	return &insertedUserDTO, nil
+	return newId, nil
 }
 
 func isEmailValid(email string) bool {
@@ -52,12 +59,13 @@ func isEmailValid(email string) bool {
 	return err == nil
 }
 
-func getHash(pwd []byte) string {
+func getHash(pwd []byte) (*string, error) {
+
 	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
 	if err != nil {
-		log.Println(err)
+		return nil, errors.New(constants.AUTH_UNABLE_TO_HASH_PASSWORD)
 	}
-	return string(hash)
+	return lo.ToPtr(string(hash)), nil
 }
 
 // func generateJWT() (string, error) {

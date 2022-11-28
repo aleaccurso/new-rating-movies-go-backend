@@ -64,3 +64,15 @@ func (repository UserRepository) GetUserById(context context.Context, userId pri
 
 	return &user, nil
 }
+
+func (repository UserRepository) GetUserByEmail(context context.Context, email string) (*models.User, error) {
+
+	var user models.User
+
+	err := repository.database.Users.FindOne(context, bson.M{"email": email}).Decode(&user)
+	if err != nil {
+		return nil, errors.New(constants.RESOURCE_NOT_FOUND + "user")
+	}
+
+	return &user, nil
+}

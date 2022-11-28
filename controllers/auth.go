@@ -26,16 +26,16 @@ func (controller AuthController) Register(c *gin.Context) {
 
 	ctx := context.TODO()
 
-	if err := c.ShouldBindBodyWith(&userReqCreateDTO, binding.JSON); err == nil {
+	if err := c.ShouldBindBodyWith(&userReqCreateDTO, binding.JSON); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.UNABLE_TO_BIND_BODY).Error())
 		return
 	}
 
-	user, err := controller.usecases.AuthUsecase.Register(ctx, userReqCreateDTO)
+	newId, err := controller.usecases.AuthUsecase.Register(ctx, userReqCreateDTO)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, user)
+	c.IndentedJSON(http.StatusOK, newId)
 }

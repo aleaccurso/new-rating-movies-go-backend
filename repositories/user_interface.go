@@ -10,4 +10,5 @@ import (
 type IUserRepository interface {
 	GetUsers(context context.Context, page int, size int) ([]models.User, error)
 	GetUserById(context context.Context, userId primitive.ObjectID) (*models.User, error)
+	GetUserByEmail(context context.Context, email string) (*models.User, error)
 }

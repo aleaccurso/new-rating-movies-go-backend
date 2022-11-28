@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
@@ -19,14 +20,14 @@ type Database struct {
 func Initialise() (*Database, error) {
 
 	if err := godotenv.Load(); err != nil {
-		return nil, fmt.Errorf("database: No .env file found")
+		return nil, errors.New("database: No .env file found")
 		// log.Println("No .env file found")
 	}
 
 	uri := os.Getenv("MONGODB_URI")
 
 	if uri == "" {
-		return nil, fmt.Errorf("Database: You must set your 'MONGODB_URI' environmental variable")
+		return nil, errors.New("Database: You must set your 'MONGODB_URI' environmental variable")
 		// log.Fatal("You must set your 'MONGODB_URI' environmental variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
 	}
 
@@ -35,13 +36,13 @@ func Initialise() (*Database, error) {
 	opt := options.Client().ApplyURI(uri)
 	client, err := mongo.Connect(ctx, opt)
 	if err != nil {
-		return nil, fmt.Errorf("Database: Cannot connect to DB")
+		return nil, errors.New("Database: Cannot connect to DB")
 	}
 
 	// Check the connection
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Database: Lost the connection to DB")
+		return nil, errors.New("Database: Lost the connection to DB")
 	}
 
 	db := client.Database("newRatingMovies")
