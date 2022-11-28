@@ -5,9 +5,7 @@ import (
 	"errors"
 	"new-rating-movies-go-backend/constants"
 	"new-rating-movies-go-backend/database"
-	"new-rating-movies-go-backend/dtos"
 	"new-rating-movies-go-backend/models"
-	"new-rating-movies-go-backend/repositories/mappers"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -24,7 +22,7 @@ func InitialiseUserRepository(db *database.Database) UserRepository {
 	}
 }
 
-func (repository UserRepository) GetUsers(context context.Context, page int, size int) ([]dtos.UserResDTO, error) {
+func (repository UserRepository) GetUsers(context context.Context, page int, size int) ([]models.User, error) {
 	var users []models.User
 
 	cursor, err := repository.database.Users.Find(context, bson.M{})
@@ -50,10 +48,10 @@ func (repository UserRepository) GetUsers(context context.Context, page int, siz
 	// once exhausted, close the cursor
 	cursor.Close(context)
 
-	return mappers.UserModelsToResDTOs(users), nil
+	return users, nil
 }
 
-func (repository UserRepository) GetUserById(context context.Context, userId primitive.ObjectID) (*dtos.UserResDTO, error) {
+func (repository UserRepository) GetUserById(context context.Context, userId primitive.ObjectID) (*models.User, error) {
 	var user models.User
 
 	err := repository.database.Users.FindOne(context, bson.D{{Name: "_id", Value: userId}}).Decode(&user)
@@ -64,7 +62,5 @@ func (repository UserRepository) GetUserById(context context.Context, userId pri
 		return nil, errors.New(constants.SERVER_ERROR)
 	}
 
-	userDTO := mappers.UserModelToResDTO(user)
-
-	return &userDTO, nil
+	return &user, nil
 }

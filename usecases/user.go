@@ -6,6 +6,7 @@ import (
 	"new-rating-movies-go-backend/constants"
 	"new-rating-movies-go-backend/dtos"
 	"new-rating-movies-go-backend/repositories"
+	"new-rating-movies-go-backend/usecases/mappers"
 	"strconv"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -38,7 +39,7 @@ func (usecase UserUsecase) GetUsers(context context.Context, page string, size s
 		return nil, err
 	}
 
-	return users, nil
+	return mappers.UserModelsToResDTOs(users), nil
 }
 
 func (usecase UserUsecase) GetUserById(context context.Context, userId string) (*dtos.UserResDTO, error) {
@@ -52,5 +53,7 @@ func (usecase UserUsecase) GetUserById(context context.Context, userId string) (
 		return nil, err
 	}
 
-	return user, nil
+	userDTO := mappers.UserModelToResDTO(*user)
+
+	return &userDTO, nil
 }

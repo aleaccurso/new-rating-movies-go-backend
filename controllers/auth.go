@@ -1,6 +1,16 @@
 package controllers
 
-import "new-rating-movies-go-backend/usecases"
+import (
+	"context"
+	"errors"
+	"net/http"
+	"new-rating-movies-go-backend/constants"
+	"new-rating-movies-go-backend/dtos"
+	"new-rating-movies-go-backend/usecases"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+)
 
 type AuthController struct {
 	usecases usecases.Usecase
@@ -8,4 +18,24 @@ type AuthController struct {
 
 func InitialiseAuthController(usecases usecases.Usecase) AuthController {
 	return AuthController{usecases: usecases}
+}
+
+func (controller AuthController) Register(c *gin.Context) {
+
+	var userReqCreateDTO dtos.UserReqCreateDTO
+
+	ctx := context.TODO()
+
+	if errA := c.ShouldBindBodyWith(&userReqCreateDTO, binding.JSON); errA == nil {
+		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.UNABLE_TO_BIND_BODY).Error())
+		return
+	}
+
+	user, err := controller.usecases.AuthUsecase.Register(ctx, userReqCreateDTO)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, user)
 }

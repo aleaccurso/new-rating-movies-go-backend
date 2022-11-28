@@ -12,6 +12,7 @@ func Initialise(database *database.Database) Repository {
 	return Repository{
 		RepositoryBase: RepositoryBase{
 			UserRepository: InitialiseUserRepository(database),
+			AuthRepository: InitialiseAuthRepository(database),
 		},
 	}
 }

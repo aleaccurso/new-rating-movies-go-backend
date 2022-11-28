@@ -10,6 +10,7 @@ func Initialise(repository repositories.Repository) Usecase {
 	return Usecase{
 		UsecaseBase: UsecaseBase{
 			UserUsecase: InitialiseUserUsecase(repository),
+			AuthUsecase: InitialiseAuthUsecase(repository),
 		},
 	}
 }
