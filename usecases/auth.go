@@ -3,12 +3,16 @@ package usecases
 import (
 	"context"
 	"errors"
+	"log"
 	"net/mail"
 	"new-rating-movies-go-backend/constants"
 	"new-rating-movies-go-backend/dtos"
 	"new-rating-movies-go-backend/enums"
 	"new-rating-movies-go-backend/repositories"
+	"os"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/samber/lo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
@@ -19,6 +23,12 @@ type AuthUsecase struct {
 	repository repositories.Repository
 }
 
+type JWTClaim struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	jwt.StandardClaims
+}
+
 func InitialiseAuthUsecase(repository repositories.Repository) AuthUsecase {
 	return AuthUsecase{
 		repository: repository,
@@ -27,7 +37,7 @@ func InitialiseAuthUsecase(repository repositories.Repository) AuthUsecase {
 
 func (usecase AuthUsecase) Register(context context.Context, userDTO dtos.UserReqCreateDTO) (*primitive.ObjectID, error) {
 
-	if !isEmailValid(userDTO.Email) {
+	if !usecase.isEmailValid(userDTO.Email) {
 		return nil, errors.New(constants.BAD_DATA + "email")
 	}
 
@@ -35,7 +45,7 @@ func (usecase AuthUsecase) Register(context context.Context, userDTO dtos.UserRe
 		return nil, errors.New(constants.BAD_DATA + "language")
 	}
 
-	hashedPassword, err := getHash([]byte(userDTO.Password))
+	hashedPassword, err := usecase.getHash([]byte(userDTO.Password))
 	if err != nil {
 		return nil, err
 	}
@@ -54,27 +64,77 @@ func (usecase AuthUsecase) Register(context context.Context, userDTO dtos.UserRe
 	return newId, nil
 }
 
-func isEmailValid(email string) bool {
+func (usecase AuthUsecase) Login(context context.Context, loginReqDTO dtos.LoginReqDTO) (*string, error) {
+
+	// check if email exists and password is correct
+	user, err := usecase.repository.UserRepository.GetUserByEmail(context, loginReqDTO.Email)
+	if err != nil {
+		// c.IndentedJSON(http.StatusInternalServerError, err.Error())
+		return nil, err
+	}
+
+	credentialError := usecase.checkPassword(user.Password, loginReqDTO.Password)
+	if credentialError != nil {
+		// context.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		// context.Abort()
+		// return
+
+		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
+	}
+
+	tokenString, err := usecase.generateJWT(user.Email, user.Nickname)
+	if err != nil {
+		// context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// context.Abort()
+		return nil, err
+	}
+
+	return &tokenString, nil
+}
+
+func (usecase AuthUsecase) isEmailValid(email string) bool {
 	_, err := mail.ParseAddress(email)
 	return err == nil
 }
 
-func getHash(pwd []byte) (*string, error) {
+func (usecase AuthUsecase) getHash(pwd []byte) (*string, error) {
 
-	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
+	hash, err := bcrypt.GenerateFromPassword(pwd, 12)
 	if err != nil {
 		return nil, errors.New(constants.AUTH_UNABLE_TO_HASH_PASSWORD)
 	}
 	return lo.ToPtr(string(hash)), nil
 }
 
-// func generateJWT() (string, error) {
-// 	secretKey := os.Getenv("JWT_SECRET")
-// 	token := jwt.New(jwt.SigningMethodHS256)
-// 	tokenString, err := token.SignedString(secretKey)
-// 	if err != nil {
-// 		log.Println("Error in JWT token generation")
-// 		return "", err
-// 	}
-// 	return tokenString, nil
-// }
+func (usecase AuthUsecase) checkPassword(userPassword string, providedPassword string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(providedPassword))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (usecase AuthUsecase) generateJWT(nickname string, email string) (string, error) {
+
+	secretKey := os.Getenv("JWT_SECRET")
+
+	expirationTime := time.Now().Add(24 * time.Hour)
+
+	claims := &JWTClaim{
+		Email:    email,
+		Username: nickname,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString([]byte(secretKey))
+	if err != nil {
+		log.Println("Error in JWT token generation")
+		return "", err
+	}
+
+	return tokenString, nil
+}

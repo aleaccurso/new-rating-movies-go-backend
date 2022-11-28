@@ -39,3 +39,22 @@ func (controller AuthController) Register(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, newId)
 }
+
+func (controller AuthController) Login(c *gin.Context) {
+
+	var loginReqDTO dtos.LoginReqDTO
+	if err := c.ShouldBindJSON(&loginReqDTO); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	ctx := context.TODO()
+
+	token, err := controller.usecases.AuthUsecase.Login(ctx, loginReqDTO)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"token": token})
+}

@@ -9,4 +9,5 @@ import (
 
 type IAuthUsecase interface {
 	Register(context context.Context, userDTO dtos.UserReqCreateDTO) (*primitive.ObjectID, error)
+	Login(context context.Context, loginReqDTO dtos.LoginReqDTO) (*string, error)
 }

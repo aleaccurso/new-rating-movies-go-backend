@@ -42,9 +42,9 @@ func (router Router) Run() error {
 
 	// Authentication
 	api.GET("/me", router.controller.UserController.GetUsers)
-	api.GET("/login", router.controller.UserController.GetUsers)
+	api.GET("/login", router.controller.AuthController.Login)
 	api.GET("/logout", router.controller.UserController.GetUsers)
-	api.GET("/register", router.controller.AuthController.Register)
+	api.POST("/register", router.controller.AuthController.Register)
 
 	// User
 	api.GET("/users", router.controller.UserController.GetUsers)
