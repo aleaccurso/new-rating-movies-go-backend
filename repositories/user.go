@@ -9,6 +9,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -25,7 +26,11 @@ func InitialiseUserRepository(db *database.Database) UserRepository {
 func (repository UserRepository) GetUsers(context context.Context, page int, size int) ([]models.User, error) {
 	var users []models.User
 
-	cursor, err := repository.database.Users.Find(context, bson.M{})
+	limit := int64(size)
+	skip := int64(page * size)
+	paginator := options.FindOptions{Limit: &limit, Skip: &skip}
+
+	cursor, err := repository.database.Users.Find(context, bson.M{}, &paginator)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +59,7 @@ func (repository UserRepository) GetUsers(context context.Context, page int, siz
 func (repository UserRepository) GetUserById(context context.Context, userId primitive.ObjectID) (*models.User, error) {
 	var user models.User
 
-	err := repository.database.Users.FindOne(context, bson.D{{Name: "_id", Value: userId}}).Decode(&user)
+	err := repository.database.Users.FindOne(context, bson.M{"_id": userId}).Decode(&user)
 	if err == mongo.ErrNoDocuments {
 		return nil, errors.New(constants.RESOURCE_NOT_FOUND + "user")
 	}
