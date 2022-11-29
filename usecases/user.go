@@ -7,6 +7,7 @@ import (
 	"new-rating-movies-go-backend/dtos"
 	"new-rating-movies-go-backend/repositories"
 	"new-rating-movies-go-backend/usecases/mappers"
+	"new-rating-movies-go-backend/utils"
 	"strconv"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -49,6 +50,22 @@ func (usecase UserUsecase) GetUserById(context context.Context, userId string) (
 		return nil, errors.New(constants.BAD_PARAMS + "userId")
 	}
 	user, err := usecase.repository.UserRepository.GetUserById(context, userUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	userDTO := mappers.UserModelToResDTO(*user)
+
+	return &userDTO, nil
+}
+
+func (usecase UserUsecase) GetUserByEmail(context context.Context, email string) (*dtos.UserResDTO, error) {
+
+	if !utils.IsEmailValid(email) {
+		return nil, errors.New(constants.BAD_DATA + "email")
+	}
+
+	user, err := usecase.repository.UserRepository.GetUserByEmail(context, email)
 	if err != nil {
 		return nil, err
 	}

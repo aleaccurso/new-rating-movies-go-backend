@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 	"log"
-	"net/mail"
 	"new-rating-movies-go-backend/constants"
 	"new-rating-movies-go-backend/dtos"
-	"new-rating-movies-go-backend/enums"
 	"new-rating-movies-go-backend/repositories"
+	"new-rating-movies-go-backend/utils"
 	"os"
 	"time"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/samber/lo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/exp/slices"
 )
 
 type AuthUsecase struct {
@@ -39,11 +37,11 @@ func InitialiseAuthUsecase(repository repositories.Repository) AuthUsecase {
 
 func (usecase AuthUsecase) Register(context context.Context, userDTO dtos.UserReqCreateDTO) (*primitive.ObjectID, error) {
 
-	if !usecase.isEmailValid(userDTO.Email) {
+	if !utils.IsEmailValid(userDTO.Email) {
 		return nil, errors.New(constants.BAD_DATA + "email")
 	}
 
-	if !slices.Contains(enums.AllowedLanguages, userDTO.Language) {
+	if !utils.IsAllowedLanguage(userDTO.Language) {
 		return nil, errors.New(constants.BAD_DATA + "language")
 	}
 
@@ -84,7 +82,7 @@ func (usecase AuthUsecase) Login(context context.Context, loginReqDTO dtos.Login
 		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
 	}
 
-	tokenString, err := usecase.generateJWT(user.Email, user.Nickname, user.IsAdmin)
+	tokenString, err := usecase.generateJWT(user.Nickname, user.Email, user.IsAdmin)
 	if err != nil {
 		// context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		// context.Abort()
@@ -92,11 +90,6 @@ func (usecase AuthUsecase) Login(context context.Context, loginReqDTO dtos.Login
 	}
 
 	return &tokenString, nil
-}
-
-func (usecase AuthUsecase) isEmailValid(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
 }
 
 func (usecase AuthUsecase) getHash(pwd []byte) (*string, error) {
@@ -129,9 +122,9 @@ func (usecase AuthUsecase) generateJWT(nickname string, email string, isAdmin bo
 	}
 
 	claims := &JWTClaim{
-		Email:    email,
-		Username: nickname,
-		Role:     role,
+		Email:         email,
+		Username:      nickname,
+		Role:          role,
 		EmailVerified: true,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),

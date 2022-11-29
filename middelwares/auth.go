@@ -49,16 +49,20 @@ func (middleware AuthMiddleware) Authorize(f func(c *gin.Context), roles ...stri
 		}
 
 		// Verifies claims
+		roleClaims := claims["role"]
+		emailClaims := claims["email"]
+
+		roleString := fmt.Sprintf("%v", roleClaims)
+		tokenRoles := strings.Split(roleString, ",")
+
+		emailString := fmt.Sprintf("%v", emailClaims)
+
 		if len(roles) > 0 {
-			roleClaims := claims["role"]
 
 			if roleClaims == nil {
 				c.IndentedJSON(http.StatusForbidden, constants.AUTH_MISSING_PERMISSIONS)
 				return
 			}
-
-			roleString := fmt.Sprintf("%v", roleClaims)
-			tokenRoles := strings.Split(roleString, ",")
 
 			// Verifies that at least one role is in common
 			if !lo.Some(tokenRoles, roles) {
@@ -73,14 +77,11 @@ func (middleware AuthMiddleware) Authorize(f func(c *gin.Context), roles ...stri
 				return
 			}
 
-			// Save role in context
-			// if err := c.SaveContext(c, func(context *gin.Context) {
-			// 	context.Roles = tokenRoles
-			// }); err != nil {
-			// 	c.IndentedJSON(http.StatusInternalServerError, err)
-			// 	return
-			// }
 		}
+
+		// Save email and role in context
+		c.Set("user_email", emailString)
+		c.Set("user_role", roleString)
 
 		// Calls the next handler in chain
 		f(c)

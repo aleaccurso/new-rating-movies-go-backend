@@ -49,11 +49,11 @@ func (controller UserController) GetUserById(c *gin.Context) {
 
 	userId := c.Param("userId")
 
-	users, err := controller.usecases.UserUsecase.GetUserById(ctx, userId)
+	user, err := controller.usecases.UserUsecase.GetUserById(ctx, userId)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, users)
+	c.IndentedJSON(http.StatusOK, user)
 }

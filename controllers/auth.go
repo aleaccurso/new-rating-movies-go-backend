@@ -67,3 +67,23 @@ func (constroller AuthController) Logout(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, constants.SUCCESS_ACTION+"logout")
 }
+
+func (controller AuthController) GetMe(c *gin.Context) {
+
+	ctx := context.TODO()
+
+	userEmail, ok := c.MustGet("user_email").(string)
+	if !ok {
+		c.IndentedJSON(http.StatusBadRequest, errors.New("email not in context"))
+		return
+	}
+
+	user, err := controller.usecases.UserUsecase.GetUserByEmail(ctx, userEmail)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, user)
+
+}
