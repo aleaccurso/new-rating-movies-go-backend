@@ -58,3 +58,12 @@ func (controller AuthController) Login(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, gin.H{"token": token})
 }
+
+func (constroller AuthController) Logout(c *gin.Context) {
+	cookie := http.Cookie{
+		Name:   "token",
+		MaxAge: -1}
+	http.SetCookie(c.Writer, &cookie)
+
+	c.IndentedJSON(http.StatusOK, constants.SUCCESS_ACTION+"logout")
+}

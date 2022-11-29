@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"new-rating-movies-go-backend/constants"
 	"os"
@@ -9,6 +10,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/samber/lo"
 )
 
 type AuthMiddleware struct{}
@@ -47,38 +49,38 @@ func (middleware AuthMiddleware) Authorize(f func(c *gin.Context), roles ...stri
 		}
 
 		// Verifies claims
-		// if len(roles) > 0 {
-		// 	roleClaims := parsedToken.Claims["roles"]
+		if len(roles) > 0 {
+			roleClaims := claims["role"]
 
-		// 	if roleClaims == nil {
-		// 		c.IndentedJSON(http.StatusForbidden, AUTH_MISSING_PERMISSIONS)
-		// 		return
-		// 	}
+			if roleClaims == nil {
+				c.IndentedJSON(http.StatusForbidden, constants.AUTH_MISSING_PERMISSIONS)
+				return
+			}
 
-		// 	roleString := fmt.Sprintf("%v", roleClaims)
-		// 	tokenRoles := strings.Split(roleString, ",")
+			roleString := fmt.Sprintf("%v", roleClaims)
+			tokenRoles := strings.Split(roleString, ",")
 
-		// 	// Verifies that at least one role is in common
-		// 	if !lo.Some(tokenRoles, roles) {
-		// 		c.IndentedJSON(http.StatusForbidden, AUTH_MISSING_PERMISSIONS)
-		// 		return
-		// 	}
+			// Verifies that at least one role is in common
+			if !lo.Some(tokenRoles, roles) {
+				c.IndentedJSON(http.StatusForbidden, constants.AUTH_MISSING_PERMISSIONS)
+				return
+			}
 
-		// 	// Verifies that the account has been confirmed
-		// 	emailVerified := parsedToken.Claims["email_verified"].(bool)
-		// 	if !emailVerified {
-		// 		c.IndentedJSON(http.StatusForbidden, AUTH_UNVERIFIED_EMAIL)
-		// 		return
-		// 	}
+			// Verifies that the account has been confirmed
+			emailVerified := claims["email_verified"].(bool)
+			if !emailVerified {
+				c.IndentedJSON(http.StatusForbidden, constants.AUTH_UNVERIFIED_EMAIL)
+				return
+			}
 
-		// 	// Save role in context
-		// 	if err := contexts.SaveContext(c, func(context *contexts.Context) {
-		// 		context.Roles = tokenRoles
-		// 	}); err != nil {
-		// 		c.IndentedJSON(http.StatusInternalServerError, err)
-		// 		return
-		// 	}
-		// }
+			// Save role in context
+			// if err := c.SaveContext(c, func(context *gin.Context) {
+			// 	context.Roles = tokenRoles
+			// }); err != nil {
+			// 	c.IndentedJSON(http.StatusInternalServerError, err)
+			// 	return
+			// }
+		}
 
 		// Calls the next handler in chain
 		f(c)

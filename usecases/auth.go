@@ -24,8 +24,10 @@ type AuthUsecase struct {
 }
 
 type JWTClaim struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	Username      string `json:"username"`
+	Email         string `json:"email"`
+	Role          string `json:"role"`
+	EmailVerified bool   `json:"email_verified"`
 	jwt.StandardClaims
 }
 
@@ -82,7 +84,7 @@ func (usecase AuthUsecase) Login(context context.Context, loginReqDTO dtos.Login
 		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
 	}
 
-	tokenString, err := usecase.generateJWT(user.Email, user.Nickname)
+	tokenString, err := usecase.generateJWT(user.Email, user.Nickname, user.IsAdmin)
 	if err != nil {
 		// context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		// context.Abort()
@@ -114,15 +116,23 @@ func (usecase AuthUsecase) checkPassword(userPassword string, providedPassword s
 	return nil
 }
 
-func (usecase AuthUsecase) generateJWT(nickname string, email string) (string, error) {
+func (usecase AuthUsecase) generateJWT(nickname string, email string, isAdmin bool) (string, error) {
 
 	secretKey := os.Getenv("JWT_SECRET")
 
 	expirationTime := time.Now().Add(24 * time.Hour)
 
+	role := "user"
+
+	if isAdmin {
+		role = "admin"
+	}
+
 	claims := &JWTClaim{
 		Email:    email,
 		Username: nickname,
+		Role:     role,
+		EmailVerified: true,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
