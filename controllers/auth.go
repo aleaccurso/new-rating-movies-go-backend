@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"new-rating-movies-go-backend/constants"
@@ -64,15 +63,13 @@ func (controller AuthController) Logout(c *gin.Context) {
 
 func (controller AuthController) GetMe(c *gin.Context) {
 
-	ctx := context.TODO()
-
 	userEmail, ok := c.MustGet("user_email").(string)
 	if !ok {
 		c.IndentedJSON(http.StatusBadRequest, errors.New("email not in context"))
 		return
 	}
 
-	user, err := controller.usecases.UserUsecase.GetUserByEmail(ctx, userEmail)
+	user, err := controller.usecases.UserUsecase.GetUserByEmail(c, userEmail)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())
 		return

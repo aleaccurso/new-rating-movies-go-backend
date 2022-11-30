@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"new-rating-movies-go-backend/constants"
@@ -21,8 +20,6 @@ func InitialiseUserController(usecases usecases.Usecase) UserController {
 
 func (controller UserController) GetUsers(c *gin.Context) {
 
-	ctx := context.TODO()
-
 	page := c.Query("page")
 	if page == "" {
 		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.MISSING_PARAM+"page").Error())
@@ -35,7 +32,7 @@ func (controller UserController) GetUsers(c *gin.Context) {
 		return
 	}
 
-	users, err := controller.usecases.UserUsecase.GetUsers(ctx, page, size)
+	users, err := controller.usecases.UserUsecase.GetUsers(c, page, size)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
@@ -46,11 +43,9 @@ func (controller UserController) GetUsers(c *gin.Context) {
 
 func (controller UserController) GetUserById(c *gin.Context) {
 
-	ctx := context.TODO()
-
 	userId := c.Param("userId")
 
-	user, err := controller.usecases.UserUsecase.GetUserById(ctx, userId)
+	user, err := controller.usecases.UserUsecase.GetUserById(c, userId)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
@@ -61,8 +56,6 @@ func (controller UserController) GetUserById(c *gin.Context) {
 
 func (controller UserController) UpdateUserById(c *gin.Context) {
 
-	ctx := context.TODO()
-
 	userId := c.Param("userId")
 
 	var userReqUpdateDTO dtos.UserReqUpdateDTO
@@ -71,7 +64,7 @@ func (controller UserController) UpdateUserById(c *gin.Context) {
 		return
 	}
 
-	user, err := controller.usecases.UserUsecase.UpdateUserById(ctx, userId, userReqUpdateDTO)
+	user, err := controller.usecases.UserUsecase.UpdateUserById(c, userId, userReqUpdateDTO)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
@@ -82,11 +75,9 @@ func (controller UserController) UpdateUserById(c *gin.Context) {
 
 func (controller UserController) DeleteUserById(c *gin.Context) {
 
-	ctx := context.TODO()
-
 	userId := c.Param("userId")
 
-	user, err := controller.usecases.UserUsecase.DeleteUserById(ctx, userId)
+	user, err := controller.usecases.UserUsecase.DeleteUserById(c, userId)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())
 		return

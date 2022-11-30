@@ -10,6 +10,7 @@ import (
 	"new-rating-movies-go-backend/utils"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -23,7 +24,9 @@ func InitialiseUserUsecase(repository repositories.Repository) UserUsecase {
 	}
 }
 
-func (usecase UserUsecase) GetUsers(context context.Context, page string, size string) ([]dtos.UserResDTO, error) {
+func (usecase UserUsecase) GetUsers(c *gin.Context, page string, size string) ([]dtos.UserResDTO, error) {
+
+	ctx := context.TODO()
 
 	pageInt, err := strconv.Atoi(page)
 	if err != nil {
@@ -35,7 +38,7 @@ func (usecase UserUsecase) GetUsers(context context.Context, page string, size s
 		return nil, errors.New(constants.BAD_PARAMS + "size")
 	}
 
-	users, err := usecase.repository.UserRepository.GetUsers(context, pageInt, sizeInt)
+	users, err := usecase.repository.UserRepository.GetUsers(ctx, pageInt, sizeInt)
 	if err != nil {
 		return nil, err
 	}
@@ -43,15 +46,31 @@ func (usecase UserUsecase) GetUsers(context context.Context, page string, size s
 	return mappers.UserModelsToResDTOs(users), nil
 }
 
-func (usecase UserUsecase) GetUserById(context context.Context, userId string) (*dtos.UserResDTO, error) {
+func (usecase UserUsecase) GetUserById(c *gin.Context, userId string) (*dtos.UserResDTO, error) {
+
+	ctx := context.TODO()
+
+	loggedUserEmail, ok := c.Get("user_email")
+	if !ok {
+		return nil, errors.New(constants.AUTH_UNVERIFIED_EMAIL)
+	}
+
+	loggedUserRole, ok := c.Get("user_role")
+	if !ok {
+		return nil, errors.New("cannot get logged user role")
+	}
 
 	userUUID, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		return nil, errors.New(constants.BAD_PARAMS + "userId")
 	}
-	user, err := usecase.repository.UserRepository.GetUserById(context, userUUID)
+	user, err := usecase.repository.UserRepository.GetUserById(ctx, userUUID)
 	if err != nil {
 		return nil, err
+	}
+
+	if user.Email != loggedUserEmail && loggedUserRole != "admin" {
+		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
 	}
 
 	userDTO := mappers.UserModelToResDTO(*user)
@@ -59,15 +78,31 @@ func (usecase UserUsecase) GetUserById(context context.Context, userId string) (
 	return &userDTO, nil
 }
 
-func (usecase UserUsecase) GetUserByEmail(context context.Context, email string) (*dtos.UserResDTO, error) {
+func (usecase UserUsecase) GetUserByEmail(c *gin.Context, email string) (*dtos.UserResDTO, error) {
+
+	ctx := context.TODO()
+
+	loggedUserEmail, ok := c.Get("user_email")
+	if !ok {
+		return nil, errors.New(constants.AUTH_UNVERIFIED_EMAIL)
+	}
+
+	loggedUserRole, ok := c.Get("user_role")
+	if !ok {
+		return nil, errors.New("cannot get logged user role")
+	}
 
 	if !utils.IsEmailValid(email) {
 		return nil, errors.New(constants.BAD_DATA + "email")
 	}
 
-	user, err := usecase.repository.UserRepository.GetUserByEmail(context, email)
+	user, err := usecase.repository.UserRepository.GetUserByEmail(ctx, email)
 	if err != nil {
 		return nil, err
+	}
+
+	if user.Email != loggedUserEmail && loggedUserRole != "admin" {
+		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
 	}
 
 	userDTO := mappers.UserModelToResDTO(*user)
@@ -75,7 +110,19 @@ func (usecase UserUsecase) GetUserByEmail(context context.Context, email string)
 	return &userDTO, nil
 }
 
-func (usecase UserUsecase) UpdateUserById(context context.Context, userId string, reqUpdateDTO dtos.UserReqUpdateDTO) (*dtos.UserResDTO, error) {
+func (usecase UserUsecase) UpdateUserById(c *gin.Context, userId string, reqUpdateDTO dtos.UserReqUpdateDTO) (*dtos.UserResDTO, error) {
+
+	ctx := context.TODO()
+
+	loggedUserEmail, ok := c.Get("user_email")
+	if !ok {
+		return nil, errors.New(constants.AUTH_UNVERIFIED_EMAIL)
+	}
+
+	loggedUserRole, ok := c.Get("user_role")
+	if !ok {
+		return nil, errors.New("cannot get logged user role")
+	}
 
 	userUUID, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
@@ -84,9 +131,13 @@ func (usecase UserUsecase) UpdateUserById(context context.Context, userId string
 
 	userNewInfo := mappers.UserReqUpdateDTOToModel(reqUpdateDTO)
 
-	existinguser, err := usecase.repository.UserRepository.GetUserById(context, userUUID)
+	existinguser, err := usecase.repository.UserRepository.GetUserById(ctx, userUUID)
 	if err != nil {
 		return nil, err
+	}
+
+	if existinguser.Email != loggedUserEmail && loggedUserRole != "admin" {
+		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
 	}
 
 	userNewInfo.Id = existinguser.Id
@@ -94,39 +145,55 @@ func (usecase UserUsecase) UpdateUserById(context context.Context, userId string
 	userNewInfo.Favorites = existinguser.Favorites
 	userNewInfo.Rates = existinguser.Rates
 
-	err = usecase.repository.UserRepository.ModifyUserById(context, userNewInfo)
+	err = usecase.repository.UserRepository.ModifyUserById(ctx, userNewInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	updateduser, err := usecase.repository.UserRepository.GetUserById(context, userUUID)
+	updatedUser, err := usecase.repository.UserRepository.GetUserById(ctx, userUUID)
 	if err != nil {
 		return nil, err
 	}
 
-	if reqUpdateDTO.Nickname != updateduser.Nickname || reqUpdateDTO.Email != updateduser.Email || reqUpdateDTO.Admin != updateduser.IsAdmin || reqUpdateDTO.Language != updateduser.Language || reqUpdateDTO.ProfilePic != updateduser.ProfilePic {
+	if reqUpdateDTO.Nickname != updatedUser.Nickname || reqUpdateDTO.Email != updatedUser.Email || reqUpdateDTO.Admin != updatedUser.IsAdmin || reqUpdateDTO.Language != updatedUser.Language || reqUpdateDTO.ProfilePic != updatedUser.ProfilePic {
 		// ! Password check is missing in the condition
 		return nil, errors.New("something whent wrong during the update")
 	}
 
-	userResDTO := mappers.UserModelToResDTO(*updateduser)
+	userResDTO := mappers.UserModelToResDTO(*updatedUser)
 
 	return &userResDTO, nil
 }
 
-func (usecase UserUsecase) DeleteUserById(context context.Context, userId string) (*primitive.ObjectID, error) {
+func (usecase UserUsecase) DeleteUserById(c *gin.Context, userId string) (*primitive.ObjectID, error) {
+
+	ctx := context.TODO()
+
+	loggedUserEmail, ok := c.Get("user_email")
+	if !ok {
+		return nil, errors.New(constants.AUTH_UNVERIFIED_EMAIL)
+	}
+
+	loggedUserRole, ok := c.Get("user_role")
+	if !ok {
+		return nil, errors.New("cannot get logged user role")
+	}
 
 	userUUID, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		return nil, errors.New(constants.BAD_PARAMS + "userId")
 	}
 
-	user, err := usecase.repository.UserRepository.GetUserById(context, userUUID)
+	user, err := usecase.repository.UserRepository.GetUserById(ctx, userUUID)
 	if err != nil {
 		return nil, err
 	}
 
-	err = usecase.repository.UserRepository.DeleteUserById(context, user.Id)
+	if user.Email != loggedUserEmail && loggedUserRole != "admin" {
+		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
+	}
+
+	err = usecase.repository.UserRepository.DeleteUserById(ctx, user.Id)
 	if err != nil {
 		return nil, err
 	}
