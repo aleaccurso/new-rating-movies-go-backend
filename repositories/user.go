@@ -6,6 +6,7 @@ import (
 	"new-rating-movies-go-backend/constants"
 	"new-rating-movies-go-backend/database"
 	"new-rating-movies-go-backend/models"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -83,4 +84,34 @@ func (repository UserRepository) GetUserByEmail(context context.Context, email s
 	}
 
 	return &user, nil
+}
+
+func (repository UserRepository) ModifyUserById(context context.Context, user models.User) error {
+
+	user.UpdatedAt = time.Now().UTC()
+
+	update := bson.M{
+		"$set": bson.M{
+			"nickname":    user.Nickname,
+			"email":       user.Email,
+			"is_Admin":    user.IsAdmin,
+			"password":    user.Password,
+			"language":    user.Language,
+			"profile_pic": user.ProfilePic,
+		},
+	}
+
+	result, err := repository.database.Users.UpdateOne(context, bson.M{"_id": user.Id}, update)
+	if err == mongo.ErrNoDocuments {
+		return errors.New(constants.RESOURCE_NOT_FOUND + "user")
+	}
+	if err != nil {
+		return errors.New(constants.SERVER_ERROR)
+	}
+
+	if result.MatchedCount != 1 && result.ModifiedCount != 1 {
+		return errors.New("something went wrong during the update")
+	}
+
+	return nil
 }

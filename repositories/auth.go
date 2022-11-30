@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 	"new-rating-movies-go-backend/database"
-	"new-rating-movies-go-backend/dtos"
-	"new-rating-movies-go-backend/repositories/mappers"
+	"new-rating-movies-go-backend/models"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -21,12 +20,11 @@ func InitialiseAuthRepository(db *database.Database) AuthRepository {
 	}
 }
 
-func (repository AuthRepository) AddUser(context context.Context, userDTO dtos.UserReqCreateDTO) (*primitive.ObjectID, error) {
-
-	user := mappers.UserReqCreateDTOToModel(userDTO)
+func (repository AuthRepository) AddUser(context context.Context, user models.User) (*primitive.ObjectID, error) {
 
 	now := time.Now().UTC()
 	user.CreatedAt, user.UpdatedAt = now, now
+	user.Rates, user.Favorites = nil, nil
 
 	result, err := repository.database.Users.InsertOne(context, user)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"new-rating-movies-go-backend/constants"
 	"new-rating-movies-go-backend/dtos"
 	"new-rating-movies-go-backend/repositories"
+	"new-rating-movies-go-backend/usecases/mappers"
 	"new-rating-movies-go-backend/utils"
 	"os"
 	"time"
@@ -37,6 +38,8 @@ func InitialiseAuthUsecase(repository repositories.Repository) AuthUsecase {
 
 func (usecase AuthUsecase) Register(context context.Context, userDTO dtos.UserReqCreateDTO) (*primitive.ObjectID, error) {
 
+	user := mappers.UserReqCreateDTOToModel(userDTO)
+
 	if !utils.IsEmailValid(userDTO.Email) {
 		return nil, errors.New(constants.BAD_DATA + "email")
 	}
@@ -51,12 +54,12 @@ func (usecase AuthUsecase) Register(context context.Context, userDTO dtos.UserRe
 	}
 	userDTO.Password = *hashedPassword
 
-	user, _ := usecase.repository.UserRepository.GetUserByEmail(context, userDTO.Email)
-	if user != nil {
+	checkUser, _ := usecase.repository.UserRepository.GetUserByEmail(context, userDTO.Email)
+	if checkUser != nil {
 		return nil, errors.New(constants.AUTH_EMAIL_EXISTS)
 	}
 
-	newId, err := usecase.repository.AuthRepository.AddUser(context, userDTO)
+	newId, err := usecase.repository.AuthRepository.AddUser(context, user)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +82,7 @@ func (usecase AuthUsecase) Login(context context.Context, loginReqDTO dtos.Login
 		// context.Abort()
 		// return
 
-		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
+		return nil, errors.New(constants.AUTH_PASSWORD_MISSMATCH)
 	}
 
 	tokenString, err := usecase.generateJWT(user.Nickname, user.Email, user.IsAdmin)

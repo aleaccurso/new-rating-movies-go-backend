@@ -5,6 +5,30 @@ import (
 	"new-rating-movies-go-backend/models"
 )
 
+func UserReqCreateDTOToModel(dto dtos.UserReqCreateDTO) models.User {
+	return models.User{
+		Nickname:   dto.Nickname,
+		Email:      dto.Email,
+		Password:   dto.Password,
+		IsAdmin:    false,
+		Favorites:  nil,
+		Rates:      nil,
+		Language:   dto.Language,
+		ProfilePic: "",
+	}
+}
+
+func UserReqUpdateDTOToModel(dto dtos.UserReqUpdateDTO) models.User {
+	return models.User{
+		Nickname:   dto.Nickname,
+		Email:      dto.Email,
+		Password:   dto.Password,
+		IsAdmin:    dto.Admin,
+		Language:   dto.Language,
+		ProfilePic: dto.ProfilePic,
+	}
+}
+
 func UserModelToResDTO(model models.User) dtos.UserResDTO {
 	return dtos.UserResDTO{
 		Id:         model.Id,
@@ -29,3 +53,4 @@ func UserModelsToResDTOs(models []models.User) []dtos.UserResDTO {
 
 	return dtos
 }
+

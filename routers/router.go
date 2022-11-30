@@ -49,7 +49,7 @@ func (router Router) Run() error {
 	// User
 	api.GET("/users", router.controller.UserController.GetUsers)
 	api.GET("/users/:userId", router.controller.UserController.GetUserById)
-	api.PATCH("/users/:userId", router.controller.UserController.GetUserById)
+	api.PATCH("/users/:userId", router.controller.UserController.UpdateUserById)
 	api.DELETE("/users/:userId", router.controller.UserController.GetUserById)
 
 	// Movie
