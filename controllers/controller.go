@@ -6,13 +6,15 @@ import (
 )
 
 type Controller struct {
-	UserController UserController
-	AuthController AuthController
+	UserController       UserController
+	AuthController       AuthController
+	TheMovieDbController TheMovieDbController
 }
 
 func Initialise(usecases usecases.Usecase, services services.Service) Controller {
 	return Controller{
-		UserController: InitialiseUserController(usecases),
-		AuthController: InitialiseAuthController(usecases, services),
+		UserController:       InitialiseUserController(usecases),
+		AuthController:       InitialiseAuthController(usecases, services),
+		TheMovieDbController: InitialiseTheMovieDbController(usecases, services),
 	}
 }
