@@ -26,14 +26,12 @@ func (controller AuthController) Register(c *gin.Context) {
 
 	var userReqCreateDTO dtos.UserReqCreateDTO
 
-	ctx := context.TODO()
-
 	if err := c.ShouldBindBodyWith(&userReqCreateDTO, binding.JSON); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.UNABLE_TO_BIND_BODY).Error())
 		return
 	}
 
-	newId, err := controller.services.AuthService.Register(ctx, userReqCreateDTO)
+	newId, err := controller.services.AuthService.Register(c, userReqCreateDTO)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
@@ -50,9 +48,7 @@ func (controller AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	ctx := context.TODO()
-
-	token, err := controller.services.AuthService.Login(ctx, loginReqDTO)
+	token, err := controller.services.AuthService.Login(c, loginReqDTO)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
@@ -61,12 +57,8 @@ func (controller AuthController) Login(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"token": token})
 }
 
-func (constroller AuthController) Logout(c *gin.Context) {
-	cookie := http.Cookie{
-		Name:   "token",
-		MaxAge: -1}
-	http.SetCookie(c.Writer, &cookie)
-
+func (controller AuthController) Logout(c *gin.Context) {
+	controller.services.AuthService.Logout(c)
 	c.IndentedJSON(http.StatusOK, constants.SUCCESS_ACTION+"logout")
 }
 

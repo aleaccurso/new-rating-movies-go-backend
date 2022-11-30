@@ -1,9 +1,9 @@
 package services
 
 import (
-	"context"
 	"errors"
 	"log"
+	"net/http"
 	"new-rating-movies-go-backend/constants"
 	"new-rating-movies-go-backend/dtos"
 	"new-rating-movies-go-backend/repositories"
@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
@@ -36,7 +37,7 @@ func InitialiseAuthService(repository repositories.Repository) AuthService {
 	}
 }
 
-func (service AuthService) Register(context context.Context, userDTO dtos.UserReqCreateDTO) (*primitive.ObjectID, error) {
+func (service AuthService) Register(context *gin.Context, userDTO dtos.UserReqCreateDTO) (*primitive.ObjectID, error) {
 
 	user := mappers.UserReqCreateDTOToModel(userDTO)
 
@@ -67,7 +68,7 @@ func (service AuthService) Register(context context.Context, userDTO dtos.UserRe
 	return newId, nil
 }
 
-func (service AuthService) Login(context context.Context, loginReqDTO dtos.LoginReqDTO) (*string, error) {
+func (service AuthService) Login(context *gin.Context, loginReqDTO dtos.LoginReqDTO) (*string, error) {
 
 	// check if email exists and password is correct
 	user, err := service.repository.UserRepository.GetUserByEmail(context, loginReqDTO.Email)
@@ -93,6 +94,13 @@ func (service AuthService) Login(context context.Context, loginReqDTO dtos.Login
 	}
 
 	return &tokenString, nil
+}
+
+func (service AuthService) Logout(context *gin.Context) {
+	cookie := http.Cookie{
+		Name:   "token",
+		MaxAge: -1}
+	http.SetCookie(context.Writer, &cookie)
 }
 
 func (service AuthService) getHash(pwd []byte) (*string, error) {
