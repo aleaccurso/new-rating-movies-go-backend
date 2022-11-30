@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"new-rating-movies-go-backend/constants"
 	"new-rating-movies-go-backend/dtos"
+	"new-rating-movies-go-backend/services"
 	"new-rating-movies-go-backend/usecases"
 
 	"github.com/gin-gonic/gin"
@@ -14,10 +15,11 @@ import (
 
 type AuthController struct {
 	usecases usecases.Usecase
+	services services.Service
 }
 
-func InitialiseAuthController(usecases usecases.Usecase) AuthController {
-	return AuthController{usecases: usecases}
+func InitialiseAuthController(usecases usecases.Usecase, services services.Service) AuthController {
+	return AuthController{usecases: usecases, services: services}
 }
 
 func (controller AuthController) Register(c *gin.Context) {
@@ -31,7 +33,7 @@ func (controller AuthController) Register(c *gin.Context) {
 		return
 	}
 
-	newId, err := controller.usecases.AuthUsecase.Register(ctx, userReqCreateDTO)
+	newId, err := controller.services.AuthService.Register(ctx, userReqCreateDTO)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
@@ -50,7 +52,7 @@ func (controller AuthController) Login(c *gin.Context) {
 
 	ctx := context.TODO()
 
-	token, err := controller.usecases.AuthUsecase.Login(ctx, loginReqDTO)
+	token, err := controller.services.AuthService.Login(ctx, loginReqDTO)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())
 		return

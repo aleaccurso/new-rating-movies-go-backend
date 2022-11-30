@@ -113,3 +113,23 @@ func (usecase UserUsecase) UpdateUserById(context context.Context, userId string
 
 	return &userResDTO, nil
 }
+
+func (usecase UserUsecase) DeleteUserById(context context.Context, userId string) (*primitive.ObjectID, error) {
+
+	userUUID, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		return nil, errors.New(constants.BAD_PARAMS + "userId")
+	}
+
+	user, err := usecase.repository.UserRepository.GetUserById(context, userUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = usecase.repository.UserRepository.DeleteUserById(context, user.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user.Id, nil
+}

@@ -7,6 +7,7 @@ import (
 	middlewares "new-rating-movies-go-backend/middelwares"
 	"new-rating-movies-go-backend/repositories"
 	"new-rating-movies-go-backend/routers"
+	"new-rating-movies-go-backend/services"
 	"new-rating-movies-go-backend/usecases"
 
 	"github.com/gin-gonic/gin"
@@ -34,8 +35,11 @@ func run() error {
 	// Creates the usecase container
 	usecase := usecases.Initialise(repository)
 
+	// Creates the service container
+	service := services.Initialise(repository)
+
 	// Creates the controller container
-	controller := controllers.Initialise(usecase)
+	controller := controllers.Initialise(usecase, service)
 
 	// Creates middlewares
 	middleware := middlewares.Initialise()

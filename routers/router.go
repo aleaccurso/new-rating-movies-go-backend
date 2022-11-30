@@ -43,14 +43,14 @@ func (router Router) Run() error {
 	// Authentication
 	api.GET("/me", router.authMiddleware.Authorize(router.controller.AuthController.GetMe))
 	api.GET("/login", router.controller.AuthController.Login)
-	api.GET("/logout",  router.authMiddleware.Authorize(router.controller.AuthController.Logout))
+	api.GET("/logout", router.authMiddleware.Authorize(router.controller.AuthController.Logout))
 	api.POST("/register", router.controller.AuthController.Register)
 
 	// User
-	api.GET("/users", router.controller.UserController.GetUsers)
-	api.GET("/users/:userId", router.controller.UserController.GetUserById)
-	api.PATCH("/users/:userId", router.controller.UserController.UpdateUserById)
-	api.DELETE("/users/:userId", router.controller.UserController.GetUserById)
+	api.GET("/users", router.authMiddleware.Authorize(router.controller.UserController.GetUsers, "admin"))
+	api.GET("/users/:userId", router.authMiddleware.Authorize(router.controller.UserController.GetUserById))
+	api.PATCH("/users/:userId", router.authMiddleware.Authorize(router.controller.UserController.UpdateUserById))
+	api.DELETE("/users/:userId", router.authMiddleware.Authorize(router.controller.UserController.DeleteUserById))
 
 	// Movie
 	api.GET("/movies", router.controller.UserController.GetUsers)

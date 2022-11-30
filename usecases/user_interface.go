@@ -3,6 +3,8 @@ package usecases
 import (
 	"context"
 	"new-rating-movies-go-backend/dtos"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type IUserUsecase interface {
@@ -10,4 +12,5 @@ type IUserUsecase interface {
 	GetUserById(context context.Context, userId string) (*dtos.UserResDTO, error)
 	GetUserByEmail(context context.Context, email string) (*dtos.UserResDTO, error)
 	UpdateUserById(context context.Context, userId string, reqUpdateDTO dtos.UserReqUpdateDTO) (*dtos.UserResDTO, error)
+	DeleteUserById(context context.Context, userId string) (*primitive.ObjectID, error)
 }

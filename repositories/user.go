@@ -115,3 +115,20 @@ func (repository UserRepository) ModifyUserById(context context.Context, user mo
 
 	return nil
 }
+
+func (repository UserRepository) DeleteUserById(context context.Context, userId primitive.ObjectID) error {
+
+	result, err := repository.database.Users.DeleteOne(context, bson.M{"_id": userId})
+	if err == mongo.ErrNoDocuments {
+		return errors.New(constants.RESOURCE_NOT_FOUND + "user")
+	}
+	if err != nil {
+		return errors.New(constants.SERVER_ERROR)
+	}
+
+	if result.DeletedCount == 0 {
+		return errors.New("couldn't to delete the user")
+	}
+
+	return nil
+}

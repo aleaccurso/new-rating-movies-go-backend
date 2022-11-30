@@ -79,3 +79,18 @@ func (controller UserController) UpdateUserById(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, user)
 }
+
+func (controller UserController) DeleteUserById(c *gin.Context) {
+
+	ctx := context.TODO()
+
+	userId := c.Param("userId")
+
+	user, err := controller.usecases.UserUsecase.DeleteUserById(ctx, userId)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, user)
+}

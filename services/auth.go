@@ -1,4 +1,4 @@
-package usecases
+package services
 
 import (
 	"context"
@@ -18,7 +18,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthUsecase struct {
+type AuthService struct {
 	repository repositories.Repository
 }
 
@@ -30,13 +30,13 @@ type JWTClaim struct {
 	jwt.StandardClaims
 }
 
-func InitialiseAuthUsecase(repository repositories.Repository) AuthUsecase {
-	return AuthUsecase{
+func InitialiseAuthService(repository repositories.Repository) AuthService {
+	return AuthService{
 		repository: repository,
 	}
 }
 
-func (usecase AuthUsecase) Register(context context.Context, userDTO dtos.UserReqCreateDTO) (*primitive.ObjectID, error) {
+func (service AuthService) Register(context context.Context, userDTO dtos.UserReqCreateDTO) (*primitive.ObjectID, error) {
 
 	user := mappers.UserReqCreateDTOToModel(userDTO)
 
@@ -48,18 +48,18 @@ func (usecase AuthUsecase) Register(context context.Context, userDTO dtos.UserRe
 		return nil, errors.New(constants.BAD_DATA + "language")
 	}
 
-	hashedPassword, err := usecase.getHash([]byte(userDTO.Password))
+	hashedPassword, err := service.getHash([]byte(userDTO.Password))
 	if err != nil {
 		return nil, err
 	}
-	userDTO.Password = *hashedPassword
+	user.Password = *hashedPassword
 
-	checkUser, _ := usecase.repository.UserRepository.GetUserByEmail(context, userDTO.Email)
+	checkUser, _ := service.repository.UserRepository.GetUserByEmail(context, userDTO.Email)
 	if checkUser != nil {
 		return nil, errors.New(constants.AUTH_EMAIL_EXISTS)
 	}
 
-	newId, err := usecase.repository.AuthRepository.AddUser(context, user)
+	newId, err := service.repository.AuthRepository.AddUser(context, user)
 	if err != nil {
 		return nil, err
 	}
@@ -67,16 +67,16 @@ func (usecase AuthUsecase) Register(context context.Context, userDTO dtos.UserRe
 	return newId, nil
 }
 
-func (usecase AuthUsecase) Login(context context.Context, loginReqDTO dtos.LoginReqDTO) (*string, error) {
+func (service AuthService) Login(context context.Context, loginReqDTO dtos.LoginReqDTO) (*string, error) {
 
 	// check if email exists and password is correct
-	user, err := usecase.repository.UserRepository.GetUserByEmail(context, loginReqDTO.Email)
+	user, err := service.repository.UserRepository.GetUserByEmail(context, loginReqDTO.Email)
 	if err != nil {
 		// c.IndentedJSON(http.StatusInternalServerError, err.Error())
 		return nil, err
 	}
 
-	credentialError := usecase.checkPassword(user.Password, loginReqDTO.Password)
+	credentialError := service.checkPassword(user.Password, loginReqDTO.Password)
 	if credentialError != nil {
 		// context.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		// context.Abort()
@@ -85,7 +85,7 @@ func (usecase AuthUsecase) Login(context context.Context, loginReqDTO dtos.Login
 		return nil, errors.New(constants.AUTH_PASSWORD_MISSMATCH)
 	}
 
-	tokenString, err := usecase.generateJWT(user.Nickname, user.Email, user.IsAdmin)
+	tokenString, err := service.generateJWT(user.Nickname, user.Email, user.IsAdmin)
 	if err != nil {
 		// context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		// context.Abort()
@@ -95,16 +95,16 @@ func (usecase AuthUsecase) Login(context context.Context, loginReqDTO dtos.Login
 	return &tokenString, nil
 }
 
-func (usecase AuthUsecase) getHash(pwd []byte) (*string, error) {
+func (service AuthService) getHash(pwd []byte) (*string, error) {
 
-	hash, err := bcrypt.GenerateFromPassword(pwd, 12)
+	hash, err := bcrypt.GenerateFromPassword(pwd, 14)
 	if err != nil {
 		return nil, errors.New(constants.AUTH_UNABLE_TO_HASH_PASSWORD)
 	}
 	return lo.ToPtr(string(hash)), nil
 }
 
-func (usecase AuthUsecase) checkPassword(userPassword string, providedPassword string) error {
+func (service AuthService) checkPassword(userPassword string, providedPassword string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(providedPassword))
 	if err != nil {
 		return err
@@ -112,7 +112,7 @@ func (usecase AuthUsecase) checkPassword(userPassword string, providedPassword s
 	return nil
 }
 
-func (usecase AuthUsecase) generateJWT(nickname string, email string, isAdmin bool) (string, error) {
+func (service AuthService) generateJWT(nickname string, email string, isAdmin bool) (string, error) {
 
 	secretKey := os.Getenv("JWT_SECRET")
 
