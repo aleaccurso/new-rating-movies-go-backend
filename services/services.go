@@ -1,6 +1,6 @@
 package services
 
 type ServiceBase struct {
-	AuthService IAuthService
+	AuthService       IAuthService
 	TheMovieDbService ITheMovieDbService
 }

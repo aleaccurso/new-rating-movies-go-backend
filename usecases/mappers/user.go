@@ -53,4 +53,3 @@ func UserModelsToResDTOs(models []models.User) []dtos.UserResDTO {
 
 	return dtos
 }
-

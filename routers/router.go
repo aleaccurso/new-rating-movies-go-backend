@@ -60,8 +60,8 @@ func (router Router) Run() error {
 	api.DELETE("/movies/:movieId", router.controller.UserController.GetUserById)
 
 	// TheMovieDB
-	api.POST("/search/:title/:language", router.controller.TheMovieDbController.GetSearchResultsFromAPI)
-	api.POST("/:theMovieDbId/getInfo", router.controller.TheMovieDbController.GetInfoFromAPI)
+	api.GET("/search/:title/:language", router.controller.TheMovieDbController.GetSearchResultsFromAPI)
+	api.GET("/:theMovieDbId/getInfo", router.controller.TheMovieDbController.GetInfoFromAPI)
 
 	// Run the engine
 	if err := router.engine.Run(":8010"); err != nil {
