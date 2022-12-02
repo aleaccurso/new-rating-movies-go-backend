@@ -61,7 +61,7 @@ func (router Router) Run() error {
 
 	// TheMovieDB
 	api.GET("/search/:title/:language", router.controller.TheMovieDbController.GetSearchResultsFromAPI)
-	api.GET("/:theMovieDbId/getInfo", router.controller.TheMovieDbController.GetInfoFromAPI)
+	api.GET("/:movieDbId/getInfo", router.controller.TheMovieDbController.GetMovieInfoFromAPI)
 
 	// Run the engine
 	if err := router.engine.Run(":8010"); err != nil {

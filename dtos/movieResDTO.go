@@ -1,4 +1,3 @@
 package dtos
 
-type MovieResDTO struct {
-}
+type MovieResDTO struct{}

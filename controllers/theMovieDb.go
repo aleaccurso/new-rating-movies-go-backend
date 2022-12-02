@@ -41,6 +41,19 @@ func (controller TheMovieDbController) GetSearchResultsFromAPI(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, searchResult)
 }
 
-func (controller TheMovieDbController) GetInfoFromAPI(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, nil)
+func (controller TheMovieDbController) GetMovieInfoFromAPI(c *gin.Context) {
+
+	movieDbId := c.Param("movieDbId")
+	if movieDbId == "" {
+		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.MISSING_PARAM+"movieDbId").Error())
+		return
+	}
+
+	movieInfoResults, err := controller.services.TheMovieDbService.GetMovieInfoFromAPI(c, movieDbId)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, movieInfoResults)
 }
