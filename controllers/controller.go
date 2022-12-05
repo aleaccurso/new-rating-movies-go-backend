@@ -7,6 +7,7 @@ import (
 
 type Controller struct {
 	UserController       UserController
+	MovieController      MovieController
 	AuthController       AuthController
 	TheMovieDbController TheMovieDbController
 }
@@ -14,6 +15,7 @@ type Controller struct {
 func Initialise(usecases usecases.Usecase, services services.Service) Controller {
 	return Controller{
 		UserController:       InitialiseUserController(usecases),
+		MovieController:      InitialiseMovieController(usecases),
 		AuthController:       InitialiseAuthController(usecases, services),
 		TheMovieDbController: InitialiseTheMovieDbController(usecases, services),
 	}

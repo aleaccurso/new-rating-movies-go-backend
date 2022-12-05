@@ -15,6 +15,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 )
 
 type TheMovieDbService struct{}
@@ -119,7 +120,7 @@ func (service TheMovieDbService) getLocalMovieInfo(movieDbId string) (*map[strin
 
 	for _, language := range allowedLanguages {
 
-		localInfo, err := service.RetrieveLocalInfo(movieDbId, language)
+		localInfo, err := service.retrieveLocalInfo(movieDbId, language)
 		if err != nil {
 			return nil, err
 		}
@@ -130,7 +131,7 @@ func (service TheMovieDbService) getLocalMovieInfo(movieDbId string) (*map[strin
 	return &allLocalInfo, nil
 }
 
-func (service TheMovieDbService) RetrieveLocalInfo(movieDbId string, language string) (*dtos.ApiLocalMovieInfoResDTO, error) {
+func (service TheMovieDbService) retrieveLocalInfo(movieDbId string, language string) (*dtos.ApiLocalMovieInfoResDTO, error) {
 
 	theMovieDbAPIURL := os.Getenv("API_URL")
 	theMovieDbAPIToken := os.Getenv("API_TOKEN")
@@ -156,5 +157,47 @@ func (service TheMovieDbService) RetrieveLocalInfo(movieDbId string, language st
 		log.Fatal(err)
 	}
 
+	movieInfoResult.Trailers, err = service.retrieveLocalMovieTrailers(movieDbId, language)
+	if err != nil {
+		return nil, err
+	}
+
 	return &movieInfoResult, nil
+}
+
+func (service TheMovieDbService) retrieveLocalMovieTrailers(movieDbId string, language string) ([]dtos.ApiLocalMovieTrailerResDTO, error) {
+
+	trailersToReturn := []dtos.ApiLocalMovieTrailerResDTO{}
+
+	theMovieDbAPIURL := os.Getenv("API_URL")
+	theMovieDbAPIToken := os.Getenv("API_TOKEN")
+
+	url := theMovieDbAPIURL + "/movie/" + string(movieDbId) + "/videos?api_key=" + theMovieDbAPIToken + "&language=" + language
+
+	response, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var movieTrailersResult dtos.ApiMovieVideoResDTO
+
+	err = json.Unmarshal(body, &movieTrailersResult)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, trailer := range movieTrailersResult.Results {
+		if trailer.Site == "YouTube" && slices.Contains(enums.TrailerTypes, trailer.Type) {
+			trailersToReturn = append(trailersToReturn, trailer)
+		}
+	}
+
+	return trailersToReturn, nil
 }
