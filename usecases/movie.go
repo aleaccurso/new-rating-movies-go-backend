@@ -76,5 +76,18 @@ func (usecase MovieUsecase) CreateMovie(c *gin.Context, reqCreateDTO dtos.MovieR
 // func (usecase MovieUsecase) UpdateMovieById(c *gin.Context, movieId string, reqUpdateDTO dtos.MovieReqUpdateDTO) (*dtos.MovieResDTO, error)
 
 func (usecase MovieUsecase) DeleteMovieById(c *gin.Context, movieId string) (*primitive.ObjectID, error) {
-	return nil, nil
+
+	ctx := context.TODO()
+
+	movieUUID, err := primitive.ObjectIDFromHex(movieId)
+	if err != nil {
+		return nil, errors.New(constants.BAD_PARAMS + "movieId")
+	}
+
+	err = usecase.repository.MovieRepository.DeleteMovieById(ctx, movieUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &movieUUID, nil
 }
