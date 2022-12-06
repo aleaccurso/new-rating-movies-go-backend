@@ -85,6 +85,7 @@ func (usecase UserUsecase) GetUserById(c *gin.Context, userId string) (*dtos.Use
 	if err != nil {
 		return nil, errors.New(constants.BAD_PARAMS + "userId")
 	}
+	
 	user, err := usecase.repository.UserRepository.GetUserById(ctx, userUUID)
 	if err != nil {
 		return nil, err

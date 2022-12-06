@@ -112,3 +112,15 @@ func (repository MovieRepository) DeleteMovieById(context context.Context, movie
 
 	return nil
 }
+
+func (repository MovieRepository) CountMovies(context context.Context) (*int64, error) {
+	count, err := repository.database.Movies.CountDocuments(context, bson.M{})
+	if err == mongo.ErrNoDocuments {
+		return nil, errors.New(constants.RESOURCE_NOT_FOUND + "user")
+	}
+	if err != nil {
+		return nil, errors.New(constants.SERVER_ERROR)
+	}
+
+	return &count, nil
+}

@@ -37,20 +37,30 @@ func (usecase MovieUsecase) GetMovies(c *gin.Context, page string, size string) 
 		return nil, errors.New(constants.BAD_PARAMS + "size")
 	}
 
+	moviesCount, err := usecase.repository.MovieRepository.CountMovies(ctx)
+	if err != nil {
+		return nil, err
+	}
+	
+	nbPages := math.Ceil(float64(*moviesCount)/float64(sizeInt))
+	
+	if float64(pageInt) >= nbPages - 1 {
+		pageInt = int(math.Ceil(float64(*moviesCount)/float64(sizeInt)) - 1)
+	}
+	
+	pagingMovies := dtos.MoviePagingResDTO{
+		Page:      int8(pageInt),
+		Size:      int8(sizeInt),
+		NbPages:   int8(nbPages),
+		NbResults: int16(*moviesCount),
+	}
+	
 	movies, err := usecase.repository.MovieRepository.GetMovies(ctx, pageInt, sizeInt)
 	if err != nil {
 		return nil, err
 	}
 
-	moviesDTos := mappers.MovieModelsToResDTOs(movies)
-
-	pagingMovies := dtos.MoviePagingResDTO{
-		Page:      int8(pageInt),
-		Size:      int8(sizeInt),
-		NbPages:   int8(math.Ceil(float64(len(moviesDTos)) / float64(sizeInt))),
-		NbResults: int16(len(moviesDTos)),
-		Data:      moviesDTos,
-	}
+	pagingMovies.Data = mappers.MovieModelsToResDTOs(movies)
 
 	return &pagingMovies, nil
 }
