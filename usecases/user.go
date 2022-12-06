@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"errors"
+	"math"
 	"new-rating-movies-go-backend/constants"
 	"new-rating-movies-go-backend/dtos"
 	"new-rating-movies-go-backend/repositories"
@@ -24,7 +25,7 @@ func InitialiseUserUsecase(repository repositories.Repository) UserUsecase {
 	}
 }
 
-func (usecase UserUsecase) GetUsers(c *gin.Context, page string, size string) ([]dtos.UserResDTO, error) {
+func (usecase UserUsecase) GetUsers(c *gin.Context, page string, size string) (*dtos.UserPagingResDTO, error) {
 
 	ctx := context.TODO()
 
@@ -38,12 +39,32 @@ func (usecase UserUsecase) GetUsers(c *gin.Context, page string, size string) ([
 		return nil, errors.New(constants.BAD_PARAMS + "size")
 	}
 
+	usersCount, err := usecase.repository.UserRepository.CountUsers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	nbPages := math.Ceil(float64(*usersCount)/float64(sizeInt))
+
+	if float64(pageInt) >= nbPages - 1 {
+		pageInt = int(math.Ceil(float64(*usersCount)/float64(sizeInt)) - 1)
+	}
+
+	pagingUsers := dtos.UserPagingResDTO{
+		Page:      int8(pageInt),
+		Size:      int8(sizeInt),
+		NbPages:   int8(nbPages),
+		NbResults: int16(*usersCount),
+	}
+
 	users, err := usecase.repository.UserRepository.GetUsers(ctx, pageInt, sizeInt)
 	if err != nil {
 		return nil, err
 	}
 
-	return mappers.UserModelsToResDTOs(users), nil
+	pagingUsers.Data = mappers.UserModelsToResDTOs(users)
+
+	return &pagingUsers, nil
 }
 
 func (usecase UserUsecase) GetUserById(c *gin.Context, userId string) (*dtos.UserResDTO, error) {

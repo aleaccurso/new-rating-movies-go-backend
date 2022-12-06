@@ -53,11 +53,11 @@ func (router Router) Run() error {
 	api.DELETE("/users/:userId", router.authMiddleware.Authorize(router.controller.UserController.DeleteUserById))
 
 	// Movie
-	api.GET("/movies", router.controller.UserController.GetUsers)
-	api.POST("/movies", router.controller.UserController.GetUsers)
-	api.GET("/movies/:movieId", router.controller.UserController.GetUserById)
-	api.PATCH("/movies/:movieId", router.controller.UserController.GetUserById)
-	api.DELETE("/movies/:movieId", router.controller.UserController.GetUserById)
+	api.GET("/movies", router.controller.MovieController.GetMovies)
+	api.POST("/movies", router.controller.MovieController.CreateMovie)
+	api.GET("/movies/:movieId", router.controller.MovieController.GetMovieById)
+	// api.PATCH("/movies/:movieId", router.controller.MovieController.UpdateMovieById)
+	api.DELETE("/movies/:movieId", router.controller.MovieController.DeleteMovieById)
 
 	// TheMovieDB
 	api.GET("/search/:title/:language", router.controller.TheMovieDbController.GetSearchResultsFromAPI)

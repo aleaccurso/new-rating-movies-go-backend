@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func ApiMovieInfoToMovieResDTO(general dtos.ApiGeneralMovieInfoResDTO, local map[string]dtos.ApiLocalMovieInfoResDTO) (*dtos.ApiGetMovieInfoResDTO, error) {
+func ApiMovieInfoToMovieResDTO(general dtos.ApiGeneralMovieInfoResDTO, local map[string]dtos.LocalMovieInfoResDTO) (*dtos.ApiGetMovieInfoResDTO, error) {
 
 	director := ""
 
@@ -41,7 +41,7 @@ func ApiMovieInfoToMovieResDTO(general dtos.ApiGeneralMovieInfoResDTO, local map
 	}, nil
 }
 
-func toCastingString(casting []dtos.ApiCastDTO) string {
+func toCastingString(casting []dtos.CastDTO) string {
 
 	count := 0
 	topThreeActors := []string{}

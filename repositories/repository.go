@@ -11,8 +11,9 @@ type Repository struct {
 func Initialise(database *database.Database) Repository {
 	return Repository{
 		RepositoryBase: RepositoryBase{
-			UserRepository: InitialiseUserRepository(database),
-			AuthRepository: InitialiseAuthRepository(database),
+			UserRepository:  InitialiseUserRepository(database),
+			AuthRepository:  InitialiseAuthRepository(database),
+			MovieRepository: InitialiseMovieRepository(database),
 		},
 	}
 }

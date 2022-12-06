@@ -9,8 +9,8 @@ type ApiGetMovieInfoResDTO struct {
 	VoteCount   float32  `bson:"vote_count,omitempty" json:"vote_count"`
 	Genre       []string `bson:"genre,omitempty" json:"genre"`
 
-	En ApiLocalMovieInfoResDTO `bson:"en,omitempty" json:"en"`
-	Fr ApiLocalMovieInfoResDTO `bson:"fr,omitempty" json:"fr"`
-	It ApiLocalMovieInfoResDTO `bson:"it,omitempty" json:"it"`
-	Nl ApiLocalMovieInfoResDTO `bson:"nl,omitempty" json:"nl"`
+	En LocalMovieInfoResDTO `bson:"en,omitempty" json:"en"`
+	Fr LocalMovieInfoResDTO `bson:"fr,omitempty" json:"fr"`
+	It LocalMovieInfoResDTO `bson:"it,omitempty" json:"it"`
+	Nl LocalMovieInfoResDTO `bson:"nl,omitempty" json:"nl"`
 }

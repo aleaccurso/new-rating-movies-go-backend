@@ -13,4 +13,5 @@ type IUserRepository interface {
 	GetUserByEmail(context context.Context, email string) (*models.User, error)
 	ModifyUserById(context context.Context, user models.User) error
 	DeleteUserById(context context.Context, userId primitive.ObjectID) error
+	CountUsers(context context.Context) (*int64, error)
 }

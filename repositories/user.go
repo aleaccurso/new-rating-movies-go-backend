@@ -92,6 +92,7 @@ func (repository UserRepository) ModifyUserById(context context.Context, user mo
 
 	update := bson.M{
 		"$set": bson.M{
+			"updated_at":  user.UpdatedAt,
 			"nickname":    user.Nickname,
 			"email":       user.Email,
 			"is_Admin":    user.IsAdmin,
@@ -131,4 +132,16 @@ func (repository UserRepository) DeleteUserById(context context.Context, userId 
 	}
 
 	return nil
+}
+
+func (repository UserRepository) CountUsers(context context.Context) (*int64, error) {
+	count, err := repository.database.Users.CountDocuments(context, bson.M{})
+	if err == mongo.ErrNoDocuments {
+		return nil, errors.New(constants.RESOURCE_NOT_FOUND + "user")
+	}
+	if err != nil {
+		return nil, errors.New(constants.SERVER_ERROR)
+	}
+
+	return &count, nil
 }

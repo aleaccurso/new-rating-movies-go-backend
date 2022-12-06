@@ -38,7 +38,7 @@ func UserModelToResDTO(model models.User) dtos.UserResDTO {
 		Email:      model.Email,
 		IsAdmin:    model.IsAdmin,
 		Favorites:  model.Favorites,
-		Rates:      RateModelsToResDtos(model.Rates),
+		Rates:      rateModelsToResDtos(model.Rates),
 		Language:   model.Language,
 		ProfilePic: model.ProfilePic,
 	}

@@ -9,7 +9,7 @@ import (
 type UserResDTO struct {
 	Id         primitive.ObjectID `bson:"id,omitempty" json:"id"`
 	CreatedAt  time.Time          `bson:"created_a,omitempty" json:"created_at"`
-	UpdatedAt  time.Time          `bson:"modified_at,omitempty" json:"modified_at"`
+	UpdatedAt  time.Time          `bson:"updated_at,omitempty" json:"updated_at"`
 	Nickname   string             `bson:"nickname,omitempty" json:"nickname"`
 	Email      string             `bson:"email,omitempty" json:"email"`
 	IsAdmin    bool               `bson:"is_admin,omitempty" json:"is_admin"`

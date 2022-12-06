@@ -14,15 +14,6 @@ type ApiGenreDTO struct {
 }
 
 type ApiCreditsDTO struct {
-	Crew []ApiCrewDTO `bson:"crew,omitempty" json:"crew"`
-	Cast []ApiCastDTO `bson:"cast,omitempty" json:"cast"`
-}
-
-type ApiCrewDTO struct {
-	Name string `bson:"name,omitempty" json:"name"`
-	Job  string `bson:"job,omitempty" json:"job"`
-}
-
-type ApiCastDTO struct {
-	Name string `bson:"name,omitempty" json:"name"`
+	Crew []CrewDTO `bson:"crew,omitempty" json:"crew"`
+	Cast []CastDTO `bson:"cast,omitempty" json:"cast"`
 }

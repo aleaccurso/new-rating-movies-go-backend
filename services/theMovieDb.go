@@ -112,9 +112,9 @@ func (service TheMovieDbService) getGeneralMovieInfo(movieDbId string) (*dtos.Ap
 	return &movieInfoResult, nil
 }
 
-func (service TheMovieDbService) getLocalMovieInfo(movieDbId string) (*map[string]dtos.ApiLocalMovieInfoResDTO, error) {
+func (service TheMovieDbService) getLocalMovieInfo(movieDbId string) (*map[string]dtos.LocalMovieInfoResDTO, error) {
 
-	allLocalInfo := map[string]dtos.ApiLocalMovieInfoResDTO{}
+	allLocalInfo := map[string]dtos.LocalMovieInfoResDTO{}
 
 	allowedLanguages := enums.AllowedLanguages
 
@@ -131,7 +131,7 @@ func (service TheMovieDbService) getLocalMovieInfo(movieDbId string) (*map[strin
 	return &allLocalInfo, nil
 }
 
-func (service TheMovieDbService) retrieveLocalInfo(movieDbId string, language string) (*dtos.ApiLocalMovieInfoResDTO, error) {
+func (service TheMovieDbService) retrieveLocalInfo(movieDbId string, language string) (*dtos.LocalMovieInfoResDTO, error) {
 
 	theMovieDbAPIURL := os.Getenv("API_URL")
 	theMovieDbAPIToken := os.Getenv("API_TOKEN")
@@ -150,7 +150,7 @@ func (service TheMovieDbService) retrieveLocalInfo(movieDbId string, language st
 		return nil, err
 	}
 
-	var movieInfoResult dtos.ApiLocalMovieInfoResDTO
+	var movieInfoResult dtos.LocalMovieInfoResDTO
 
 	err = json.Unmarshal(body, &movieInfoResult)
 	if err != nil {
@@ -165,9 +165,9 @@ func (service TheMovieDbService) retrieveLocalInfo(movieDbId string, language st
 	return &movieInfoResult, nil
 }
 
-func (service TheMovieDbService) retrieveLocalMovieTrailers(movieDbId string, language string) ([]dtos.ApiLocalMovieTrailerResDTO, error) {
+func (service TheMovieDbService) retrieveLocalMovieTrailers(movieDbId string, language string) ([]dtos.LocalMovieTrailerResDTO, error) {
 
-	trailersToReturn := []dtos.ApiLocalMovieTrailerResDTO{}
+	trailersToReturn := []dtos.LocalMovieTrailerResDTO{}
 
 	theMovieDbAPIURL := os.Getenv("API_URL")
 	theMovieDbAPIToken := os.Getenv("API_TOKEN")

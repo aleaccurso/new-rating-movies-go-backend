@@ -8,7 +8,7 @@ import (
 )
 
 type IUserUsecase interface {
-	GetUsers(c *gin.Context, page string, size string) ([]dtos.UserResDTO, error)
+	GetUsers(c *gin.Context, page string, size string) (*dtos.UserPagingResDTO, error)
 	GetUserById(c *gin.Context, userId string) (*dtos.UserResDTO, error)
 	GetUserByEmail(c *gin.Context, email string) (*dtos.UserResDTO, error)
 	UpdateUserById(c *gin.Context, userId string, reqUpdateDTO dtos.UserReqUpdateDTO) (*dtos.UserResDTO, error)
