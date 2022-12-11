@@ -13,6 +13,7 @@ import (
 	"new-rating-movies-go-backend/utils"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/exp/slices"
@@ -109,6 +110,10 @@ func (service TheMovieDbService) getGeneralMovieInfo(movieDbId string) (*dtos.Ap
 		log.Fatal(err)
 	}
 
+	if len(movieInfoResult.Genres) > 0 {
+		movieInfoResult.Genres = service.genresToLowerCase(movieInfoResult.Genres)
+	}
+
 	return &movieInfoResult, nil
 }
 
@@ -200,4 +205,13 @@ func (service TheMovieDbService) retrieveLocalMovieTrailers(movieDbId string, la
 	}
 
 	return trailersToReturn, nil
+}
+
+func (service TheMovieDbService) genresToLowerCase(genres []dtos.ApiGenreDTO) []dtos.ApiGenreDTO {
+	lowerCaseGenres := make([]dtos.ApiGenreDTO, len(genres))
+	for i, genre := range genres {
+		lowerCaseGenres[i].Name = strings.ToLower(genre.Name)
+	}
+
+	return lowerCaseGenres
 }

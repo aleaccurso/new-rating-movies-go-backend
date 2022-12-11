@@ -10,7 +10,7 @@ import (
 type IMovieUsecase interface {
 	GetMovies(c *gin.Context, page string, size string) (*dtos.MoviePagingResDTO, error)
 	GetMovieById(c *gin.Context, movieId string) (*dtos.MovieResDTO, error)
-	CreateMovie(c *gin.Context, reqCreateDTO dtos.MovieReqCreateDTO) (*dtos.MovieResDTO, error)
+	CreateMovie(c *gin.Context, reqDTO dtos.MovieReqCreateDTO) (*dtos.MovieResDTO, error)
 	// UpdateMovieById(c *gin.Context, movieId string, reqUpdateDTO dtos.MovieReqUpdateDTO) (*dtos.MovieResDTO, error)
 	DeleteMovieById(c *gin.Context, movieId string) (*primitive.ObjectID, error)
 }

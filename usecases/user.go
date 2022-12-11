@@ -46,8 +46,12 @@ func (usecase UserUsecase) GetUsers(c *gin.Context, page string, size string) (*
 
 	nbPages := math.Ceil(float64(*usersCount)/float64(sizeInt))
 
+	if nbPages == 0 {
+		nbPages = 1
+	}
+	
 	if float64(pageInt) >= nbPages - 1 {
-		pageInt = int(math.Ceil(float64(*usersCount)/float64(sizeInt)) - 1)
+		pageInt = int(nbPages - 1)
 	}
 
 	pagingUsers := dtos.UserPagingResDTO{
@@ -164,8 +168,6 @@ func (usecase UserUsecase) UpdateUserById(c *gin.Context, userId string, reqUpda
 
 	userNewInfo.Id = existinguser.Id
 	userNewInfo.CreatedAt = existinguser.CreatedAt
-	userNewInfo.Favorites = existinguser.Favorites
-	userNewInfo.Rates = existinguser.Rates
 
 	err = usecase.repository.UserRepository.ModifyUserById(ctx, userNewInfo)
 	if err != nil {
@@ -178,7 +180,6 @@ func (usecase UserUsecase) UpdateUserById(c *gin.Context, userId string, reqUpda
 	}
 
 	if reqUpdateDTO.Nickname != updatedUser.Nickname || reqUpdateDTO.Email != updatedUser.Email || reqUpdateDTO.Admin != updatedUser.IsAdmin || reqUpdateDTO.Language != updatedUser.Language || reqUpdateDTO.ProfilePic != updatedUser.ProfilePic {
-		// ! Password check is missing in the condition
 		return nil, errors.New("something whent wrong during the update")
 	}
 

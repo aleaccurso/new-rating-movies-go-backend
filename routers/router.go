@@ -42,14 +42,14 @@ func (router Router) Run() error {
 
 	// Authentication
 	api.GET("/me", router.authMiddleware.Authorize(router.controller.AuthController.GetMe))
-	api.GET("/login", router.controller.AuthController.Login)
+	api.POST("/login", router.controller.AuthController.Login)
 	api.GET("/logout", router.authMiddleware.Authorize(router.controller.AuthController.Logout))
 	api.POST("/register", router.controller.AuthController.Register)
 
 	// User
 	api.GET("/users", router.authMiddleware.Authorize(router.controller.UserController.GetUsers, "admin"))
 	api.GET("/users/:userId", router.authMiddleware.Authorize(router.controller.UserController.GetUserById))
-	api.PATCH("/users/:userId", router.authMiddleware.Authorize(router.controller.UserController.UpdateUserById))
+	api.POST("/users/:userId", router.authMiddleware.Authorize(router.controller.UserController.UpdateUserById))
 	api.DELETE("/users/:userId", router.authMiddleware.Authorize(router.controller.UserController.DeleteUserById))
 
 	// Movie
@@ -61,7 +61,7 @@ func (router Router) Run() error {
 
 	// TheMovieDB
 	api.GET("/search/:title/:language", router.controller.TheMovieDbController.GetSearchResultsFromAPI)
-	api.GET("/:movieDbId/getInfo", router.controller.TheMovieDbController.GetMovieInfoFromAPI)
+	api.GET("/get-info/:movieDbId", router.controller.TheMovieDbController.GetMovieInfoFromAPI)
 
 	// Run the engine
 	if err := router.engine.Run(":8010"); err != nil {

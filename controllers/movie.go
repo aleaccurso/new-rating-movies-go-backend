@@ -43,6 +43,10 @@ func (controller MovieController) GetMovies(c *gin.Context) {
 func (controller MovieController) GetMovieById(c *gin.Context) {
 
 	movieId := c.Param("movieId")
+	if movieId == "" {
+		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.MISSING_PARAM+"movieId").Error())
+		return
+	}
 
 	movie, err := controller.usecases.MovieUsecase.GetMovieById(c, movieId)
 	if err != nil {
@@ -55,13 +59,13 @@ func (controller MovieController) GetMovieById(c *gin.Context) {
 
 func (controller MovieController) CreateMovie(c *gin.Context) {
 
-	var movieReqCreateDTO dtos.MovieReqCreateDTO
-	if err := c.ShouldBindJSON(&movieReqCreateDTO); err != nil {
+	var userReqCreateDTO dtos.MovieReqCreateDTO
+	if err := c.ShouldBindJSON(&userReqCreateDTO); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	movie, err := controller.usecases.MovieUsecase.CreateMovie(c, movieReqCreateDTO)
+	movie, err := controller.usecases.MovieUsecase.CreateMovie(c, userReqCreateDTO)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
@@ -92,6 +96,10 @@ func (controller MovieController) CreateMovie(c *gin.Context) {
 func (controller MovieController) DeleteMovieById(c *gin.Context) {
 
 	movieId := c.Param("movieId")
+	if movieId == "" {
+		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.MISSING_PARAM+"movieId").Error())
+		return
+	}
 
 	movie, err := controller.usecases.MovieUsecase.DeleteMovieById(c, movieId)
 	if err != nil {

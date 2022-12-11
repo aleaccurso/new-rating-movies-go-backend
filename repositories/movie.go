@@ -5,7 +5,9 @@ import (
 	"errors"
 	"new-rating-movies-go-backend/constants"
 	"new-rating-movies-go-backend/database"
+	"new-rating-movies-go-backend/dtos"
 	"new-rating-movies-go-backend/models"
+	"new-rating-movies-go-backend/repositories/mappers"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -71,6 +73,40 @@ func (repository MovieRepository) GetMovieById(context context.Context, movieId 
 	return &movie, nil
 }
 
+func (repository MovieRepository) AddMovie(context context.Context, movieDTO *dtos.ApiGetMovieInfoResDTO) (*primitive.ObjectID, error) {
+
+	movieToAdd := mappers.ApiGetMovieInfoResDTOToMovieModel(*movieDTO)
+
+	now := time.Now().UTC()
+	movieToAdd.CreatedAt, movieToAdd.UpdatedAt = now, now
+
+	result, err := repository.database.Movies.InsertOne(context, movieToAdd)
+	if err != nil {
+		return nil, errors.New(constants.UNABLE_TO_DO_ACTION + "add-movie")
+	}
+
+	newID, ok := result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return nil, errors.New("reposiotry/unable-to-convert-id")
+	}
+
+	return &newID, nil
+}
+
+func (repository MovieRepository) GetMovieByMoviDBId(context context.Context, movieDbId int) (*models.Movie, error) {
+	var movie models.Movie
+
+	err := repository.database.Movies.FindOne(context, bson.M{"movie_db_id": movieDbId}).Decode(&movie)
+	if err == mongo.ErrNoDocuments {
+		return nil, errors.New(constants.RESOURCE_NOT_FOUND + "movie")
+	}
+	if err != nil {
+		return nil, errors.New(constants.SERVER_ERROR)
+	}
+
+	return &movie, nil
+}
+
 func (repository MovieRepository) ModifyMovieById(context context.Context, movie models.Movie) error {
 
 	movie.UpdatedAt = time.Now().UTC()
@@ -124,3 +160,15 @@ func (repository MovieRepository) CountMovies(context context.Context) (*int64, 
 
 	return &count, nil
 }
+
+// func (repository MovieRepository) isDuplicateKeyError(err error) bool {
+// 	var e mongo.WriteException
+// 	if errors.As(err, &e) {
+// 		for _, we := range e.WriteErrors {
+// 			if we.Code == 11000 {
+// 				return true
+// 			}
+// 		}
+// 	}
+// 	return false
+// }

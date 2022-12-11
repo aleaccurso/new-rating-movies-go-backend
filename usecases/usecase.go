@@ -1,16 +1,19 @@
 package usecases
 
-import "new-rating-movies-go-backend/repositories"
+import (
+	"new-rating-movies-go-backend/repositories"
+	"new-rating-movies-go-backend/services"
+)
 
 type Usecase struct {
 	UsecaseBase
 }
 
-func Initialise(repository repositories.Repository) Usecase {
+func Initialise(repository repositories.Repository, service services.Service) Usecase {
 	return Usecase{
 		UsecaseBase: UsecaseBase{
 			UserUsecase:  InitialiseUserUsecase(repository),
-			MovieUsecase: InitialiseMovieUsecase(repository),
+			MovieUsecase: InitialiseMovieUsecase(repository, service),
 		},
 	}
 }

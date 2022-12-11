@@ -32,11 +32,11 @@ func run() error {
 	// Creates the repository container
 	repository := repositories.Initialise(database)
 
-	// Creates the usecase container
-	usecase := usecases.Initialise(repository)
-
 	// Creates the service container
 	service := services.Initialise(repository)
+
+	// Creates the usecase container
+	usecase := usecases.Initialise(repository, service)
 
 	// Creates the controller container
 	controller := controllers.Initialise(usecase, service)
