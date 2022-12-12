@@ -14,8 +14,8 @@ type User struct {
 	Email      string             `bson:"email,omitempty" json:"email"`
 	Password   string             `bson:"password,omitempty" json:"password"`
 	IsAdmin    bool               `bson:"is_admin,omitempty" json:"is_admin"`
-	Favorites  []int32            `bson:"my_favorites,omitempty" json:"my_favorites"`
-	Rates      []UserRate         `bson:"my_rates,omitempty" json:"my_rates"`
+	Favorites  []int32            `bson:"favorites,omitempty" json:"favorites"`
+	Rates      []UserRate         `bson:"rates,omitempty" json:"rates"`
 	Language   string             `bson:"language,omitempty" json:"language"`
 	ProfilePic string             `bson:"profile_pic,omitempty" json:"profile_pic"`
 }

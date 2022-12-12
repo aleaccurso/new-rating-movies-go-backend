@@ -98,6 +98,8 @@ func (repository UserRepository) ModifyUserById(context context.Context, user mo
 			"is_admin":    user.IsAdmin,
 			"language":    user.Language,
 			"profile_pic": user.ProfilePic,
+			"favorites":   user.Favorites,
+			"rates":       user.Rates,
 		},
 	}
 

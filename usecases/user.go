@@ -44,13 +44,13 @@ func (usecase UserUsecase) GetUsers(c *gin.Context, page string, size string) (*
 		return nil, err
 	}
 
-	nbPages := math.Ceil(float64(*usersCount)/float64(sizeInt))
+	nbPages := math.Ceil(float64(*usersCount) / float64(sizeInt))
 
 	if nbPages == 0 {
 		nbPages = 1
 	}
-	
-	if float64(pageInt) >= nbPages - 1 {
+
+	if float64(pageInt) >= nbPages-1 {
 		pageInt = int(nbPages - 1)
 	}
 
@@ -89,7 +89,7 @@ func (usecase UserUsecase) GetUserById(c *gin.Context, userId string) (*dtos.Use
 	if err != nil {
 		return nil, errors.New(constants.BAD_PARAMS + "userId")
 	}
-	
+
 	user, err := usecase.repository.UserRepository.GetUserById(ctx, userUUID)
 	if err != nil {
 		return nil, err
@@ -222,4 +222,65 @@ func (usecase UserUsecase) DeleteUserById(c *gin.Context, userId string) (*primi
 	}
 
 	return &user.Id, nil
+}
+
+func (usecase UserUsecase) UpSertUserFavorite(c *gin.Context, userId string, movieDbId string) (*dtos.UserResDTO, error) {
+	ctx := context.TODO()
+
+	movieDbIdInt, err := strconv.ParseInt(movieDbId, 10, 32)
+	if err != nil {
+		return nil, errors.New(constants.BAD_PARAMS + movieDbId)
+	}
+
+	userUUID, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		return nil, errors.New(constants.BAD_PARAMS + userId)
+	}
+
+	loggedUserEmail, ok := c.Get("user_email")
+	if !ok {
+		return nil, errors.New(constants.AUTH_UNVERIFIED_EMAIL)
+	}
+
+	loggedUserRole, ok := c.Get("user_role")
+	if !ok {
+		return nil, errors.New("cannot get logged user role")
+	}
+
+	user, err := usecase.repository.UserRepository.GetUserById(ctx, userUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	if user.Email != loggedUserEmail && loggedUserRole != "admin" {
+		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
+	}
+
+	user.Favorites = usecase.InsertOrRemoveUserFavorite(user.Favorites, int32(movieDbIdInt))
+
+	err = usecase.repository.UserRepository.ModifyUserById(ctx, *user)
+	if err != nil {
+		return nil, err
+	}
+
+	userDTO := mappers.UserModelToResDTO(*user)
+
+	return &userDTO, nil
+}
+
+func (usecase UserUsecase) InsertOrRemoveUserFavorite(favorites []int32, movieDbId int32) []int32 {
+
+	toReturn := favorites
+
+	if toReturn == nil {
+		toReturn = []int32{}
+	}
+
+	index := utils.IndexOfInt32(toReturn, movieDbId)
+
+	if index >= 0 {
+		return append(toReturn[:index], toReturn[index+1:]...)
+	}
+
+	return append(toReturn, movieDbId)
 }

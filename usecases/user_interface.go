@@ -13,4 +13,5 @@ type IUserUsecase interface {
 	GetUserByEmail(c *gin.Context, email string) (*dtos.UserResDTO, error)
 	UpdateUserById(c *gin.Context, userId string, reqUpdateDTO dtos.UserReqUpdateDTO) (*dtos.UserResDTO, error)
 	DeleteUserById(c *gin.Context, userId string) (*primitive.ObjectID, error)
+	UpSertUserFavorite(c *gin.Context, userId string, movieDbId string) (*dtos.UserResDTO, error)
 }

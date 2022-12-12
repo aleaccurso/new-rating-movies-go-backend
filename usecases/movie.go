@@ -62,7 +62,7 @@ func (usecase MovieUsecase) GetMovies(c *gin.Context, page string, size string) 
 		NbResults: int16(*moviesCount),
 	}
 
-	movies, err := usecase.repository.MovieRepository.GetMovies(ctx, pageInt - 1, sizeInt)
+	movies, err := usecase.repository.MovieRepository.GetMovies(ctx, pageInt-1, sizeInt)
 	if err != nil {
 		return nil, err
 	}
@@ -81,6 +81,9 @@ func (usecase MovieUsecase) GetMovieById(c *gin.Context, movieId string) (*dtos.
 	}
 
 	movie, err := usecase.repository.MovieRepository.GetMovieById(ctx, movieUUID)
+	if err != nil {
+		return nil, err
+	}
 
 	movieDTO := mappers.MovieModelToResDTO(*movie)
 
