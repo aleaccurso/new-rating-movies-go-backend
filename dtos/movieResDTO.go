@@ -11,7 +11,7 @@ type MovieResDTO struct {
 	CreatedAt time.Time          `bson:"created_a,omitempty" json:"created_at"`
 	UpdatedAt time.Time          `bson:"updated_at,omitempty" json:"updated_at"`
 
-	MovieDbId   int32    `bson:"movie_db_id,omitempty" json:"movie_db_id"`
+	MovieDbId   int32    `bson:"movie_db_id" json:"movie_db_id"`
 	ReleaseDate string   `bson:"release_date,omitempty" json:"release_date"`
 	Director    string   `bson:"director,omitempty" json:"director"`
 	Casting     string   `bson:"casting,omitempty" json:"casting"`
