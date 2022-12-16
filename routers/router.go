@@ -52,7 +52,7 @@ func (router Router) Run() error {
 	api.POST("/users/:userId", router.authMiddleware.Authorize(router.controller.UserController.UpdateUserById))
 	api.DELETE("/users/:userId", router.authMiddleware.Authorize(router.controller.UserController.DeleteUserById))
 	// api.GET("/users/:id/favorites", router.authMiddleware.Authorize(router.controller.UserController.GetUserFavorites))
-	api.POST("/users/:userId/favorites/:movieDbId", router.authMiddleware.Authorize(router.controller.UserController.UpSertUserFavorite))
+	api.POST("/users/:userId/favorites/:movieDbId", router.authMiddleware.Authorize(router.controller.UserController.ToggleUserFavorite))
 
 	// Movie
 	api.GET("/movies", router.controller.MovieController.GetMovies)

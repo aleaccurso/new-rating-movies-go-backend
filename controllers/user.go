@@ -92,11 +92,11 @@ func (controller UserController) DeleteUserById(c *gin.Context) {
 // 	c.IndentedJSON(http.StatusOK, userId)
 // }
 
-func (controller UserController) UpSertUserFavorite(c *gin.Context) {
+func (controller UserController) ToggleUserFavorite(c *gin.Context) {
 	userId := c.Param("userId")
 	movieDbId := c.Param("movieDbId")
 
-	userDTO, err := controller.usecases.UserUsecase.UpSertUserFavorite(c, userId, movieDbId)
+	userDTO, err := controller.usecases.UserUsecase.ToggleUserFavorite(c, userId, movieDbId)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())
 		return

@@ -224,7 +224,7 @@ func (usecase UserUsecase) DeleteUserById(c *gin.Context, userId string) (*primi
 	return &user.Id, nil
 }
 
-func (usecase UserUsecase) UpSertUserFavorite(c *gin.Context, userId string, movieDbId string) (*dtos.UserResDTO, error) {
+func (usecase UserUsecase) ToggleUserFavorite(c *gin.Context, userId string, movieDbId string) (*dtos.UserResDTO, error) {
 	ctx := context.TODO()
 
 	movieDbIdInt, err := strconv.ParseInt(movieDbId, 10, 32)
@@ -256,7 +256,7 @@ func (usecase UserUsecase) UpSertUserFavorite(c *gin.Context, userId string, mov
 		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
 	}
 
-	user.Favorites = usecase.InsertOrRemoveUserFavorite(user.Favorites, int32(movieDbIdInt))
+	user.Favorites = usecase.updateUserFavoriteList(user.Favorites, int32(movieDbIdInt))
 
 	err = usecase.repository.UserRepository.ModifyUserById(ctx, *user)
 	if err != nil {
@@ -268,7 +268,7 @@ func (usecase UserUsecase) UpSertUserFavorite(c *gin.Context, userId string, mov
 	return &userDTO, nil
 }
 
-func (usecase UserUsecase) InsertOrRemoveUserFavorite(favorites []int32, movieDbId int32) []int32 {
+func (usecase UserUsecase) updateUserFavoriteList(favorites []int32, movieDbId int32) []int32 {
 
 	toReturn := favorites
 
