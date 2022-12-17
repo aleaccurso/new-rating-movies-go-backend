@@ -44,6 +44,10 @@ func (controller UserController) GetUsers(c *gin.Context) {
 func (controller UserController) GetUserById(c *gin.Context) {
 
 	userId := c.Param("userId")
+	if userId == "" {
+		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.MISSING_PARAM+"userId").Error())
+		return
+	}
 
 	user, err := controller.usecases.UserUsecase.GetUserById(c, userId)
 	if err != nil {
@@ -57,6 +61,10 @@ func (controller UserController) GetUserById(c *gin.Context) {
 func (controller UserController) UpdateUserById(c *gin.Context) {
 
 	userId := c.Param("userId")
+	if userId == "" {
+		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.MISSING_PARAM+"userId").Error())
+		return
+	}
 
 	var userReqUpdateDTO dtos.UserReqUpdateDTO
 	if err := c.ShouldBindJSON(&userReqUpdateDTO); err != nil {
@@ -76,6 +84,10 @@ func (controller UserController) UpdateUserById(c *gin.Context) {
 func (controller UserController) DeleteUserById(c *gin.Context) {
 
 	userId := c.Param("userId")
+	if userId == "" {
+		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.MISSING_PARAM+"userId").Error())
+		return
+	}
 
 	user, err := controller.usecases.UserUsecase.DeleteUserById(c, userId)
 	if err != nil {
@@ -86,11 +98,33 @@ func (controller UserController) DeleteUserById(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, user)
 }
 
-// func (controller UserController) GetUserFavorites(c *gin.Context) {
-// 	userId := c.Param("userId")
+func (controller UserController) GetUserFavoriteMovies(c *gin.Context) {
+	userId := c.Param("userId")
+	if userId == "" {
+		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.MISSING_PARAM+"userId").Error())
+		return
+	}
 
-// 	c.IndentedJSON(http.StatusOK, userId)
-// }
+	page := c.Query("page")
+	if page == "" {
+		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.MISSING_PARAM+"page").Error())
+		return
+	}
+
+	size := c.Query("size")
+	if size == "" {
+		c.IndentedJSON(http.StatusBadRequest, errors.New(constants.MISSING_PARAM+"size").Error())
+		return
+	}
+
+	favoriteMovies, err := controller.usecases.UserUsecase.GetUserFavoriteMovies(c, userId, page, size)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, favoriteMovies)
+}
 
 func (controller UserController) ToggleUserFavorite(c *gin.Context) {
 	userId := c.Param("userId")

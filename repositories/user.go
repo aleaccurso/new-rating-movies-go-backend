@@ -28,26 +28,16 @@ func (repository UserRepository) GetUsers(context context.Context, page int, siz
 	var users []models.User
 
 	limit := int64(size)
-	skip := int64(page * size)
-	paginator := options.FindOptions{Limit: &limit, Skip: &skip}
+	skip := int64((page-1) * size)
+	options := options.FindOptions{Limit: &limit, Skip: &skip}
 
-	cursor, err := repository.database.Users.Find(context, bson.M{}, &paginator)
+	cursor, err := repository.database.Users.Find(context, bson.M{}, &options)
 	if err != nil {
 		return nil, err
 	}
 
-	for cursor.Next(context) {
-		//Create a value into which the single document can be decoded
-		var user models.User
-		err := cursor.Decode(&user)
-		if err != nil {
-			return nil, err
-		}
-
-		users = append(users, user)
-	}
-
-	if err := cursor.Err(); err != nil {
+	err = cursor.All(context, &users)
+	if err != nil {
 		return nil, err
 	}
 

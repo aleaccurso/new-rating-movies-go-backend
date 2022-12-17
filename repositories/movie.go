@@ -30,26 +30,16 @@ func (repository MovieRepository) GetMovies(context context.Context, page int, s
 	var movies []models.Movie
 
 	limit := int64(size)
-	skip := int64(page * size)
-	paginator := options.FindOptions{Limit: &limit, Skip: &skip}
+	skip := int64((page - 1) * size)
+	options := options.FindOptions{Limit: &limit, Skip: &skip}
 
-	cursor, err := repository.database.Movies.Find(context, bson.M{}, &paginator)
+	cursor, err := repository.database.Movies.Find(context, bson.M{}, &options)
 	if err != nil {
 		return nil, err
 	}
 
-	for cursor.Next(context) {
-		//Create a value into which the single document can be decoded
-		var movie models.Movie
-		err := cursor.Decode(&movie)
-		if err != nil {
-			return nil, err
-		}
-
-		movies = append(movies, movie)
-	}
-
-	if err := cursor.Err(); err != nil {
+	err = cursor.All(context, &movies)
+	if err != nil {
 		return nil, err
 	}
 
@@ -161,14 +151,27 @@ func (repository MovieRepository) CountMovies(context context.Context) (*int64, 
 	return &count, nil
 }
 
-// func (repository MovieRepository) isDuplicateKeyError(err error) bool {
-// 	var e mongo.WriteException
-// 	if errors.As(err, &e) {
-// 		for _, we := range e.WriteErrors {
-// 			if we.Code == 11000 {
-// 				return true
-// 			}
-// 		}
-// 	}
-// 	return false
-// }
+func (repository MovieRepository) GetUserFavoriteMovies(context context.Context, userFavorites []int32, page int, size int) ([]models.Movie, error) {
+	var userFavoriteMovies []models.Movie
+
+	limit := int64(size)
+	skip := int64((page - 1) * size)
+	options := options.FindOptions{Limit: &limit, Skip: &skip}
+
+	filter := bson.M{"mongo_db_id": bson.M{"$in": userFavorites}}
+
+	cursor, err := repository.database.Movies.Find(context, filter, &options)
+	if err != nil {
+		return nil, err
+	}
+
+	err = cursor.All(context, &userFavoriteMovies)
+	if err != nil {
+		return nil, err
+	}
+
+	// once exhausted, close the cursor
+	cursor.Close(context)
+
+	return userFavoriteMovies, nil
+}

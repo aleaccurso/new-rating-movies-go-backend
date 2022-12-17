@@ -16,14 +16,14 @@ import (
 )
 
 type MovieUsecase struct {
-	repository repositories.Repository
-	service    services.Service
+	repositories repositories.Repository
+	services     services.Service
 }
 
-func InitialiseMovieUsecase(repository repositories.Repository, service services.Service) MovieUsecase {
+func InitialiseMovieUsecase(repositories repositories.Repository, services services.Service) MovieUsecase {
 	return MovieUsecase{
-		repository: repository,
-		service:    service,
+		repositories: repositories,
+		services:     services,
 	}
 }
 
@@ -34,24 +34,34 @@ func (usecase MovieUsecase) GetMovies(c *gin.Context, page string, size string) 
 	if err != nil {
 		return nil, errors.New(constants.BAD_PARAMS + "page")
 	}
+	if pageInt <= 0 {
+		pageInt = 1
+	}
 
 	sizeInt, err := strconv.Atoi(size)
 	if err != nil {
 		return nil, errors.New(constants.BAD_PARAMS + "size")
 	}
+	if sizeInt <= 0 {
+		sizeInt = 8
+	}
 
-	moviesCount, err := usecase.repository.MovieRepository.CountMovies(ctx)
+	moviesCount, err := usecase.repositories.MovieRepository.CountMovies(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	nbPages := math.Ceil(float64(*moviesCount) / float64(sizeInt))
 
+	if pageInt <= 0 {
+		pageInt = 1
+	}
+
 	if nbPages == 0 {
 		nbPages = 1
 	}
 
-	if float64(pageInt) >= nbPages-1 {
+	if float64(pageInt) > nbPages {
 		pageInt = int(nbPages)
 	}
 
@@ -62,7 +72,7 @@ func (usecase MovieUsecase) GetMovies(c *gin.Context, page string, size string) 
 		NbResults: int16(*moviesCount),
 	}
 
-	movies, err := usecase.repository.MovieRepository.GetMovies(ctx, pageInt-1, sizeInt)
+	movies, err := usecase.repositories.MovieRepository.GetMovies(ctx, pageInt, sizeInt)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +90,7 @@ func (usecase MovieUsecase) GetMovieById(c *gin.Context, movieId string) (*dtos.
 		return nil, errors.New(constants.BAD_PARAMS + "movieId")
 	}
 
-	movie, err := usecase.repository.MovieRepository.GetMovieById(ctx, movieUUID)
+	movie, err := usecase.repositories.MovieRepository.GetMovieById(ctx, movieUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -95,25 +105,25 @@ func (usecase MovieUsecase) CreateMovie(c *gin.Context, reqDTO dtos.MovieReqCrea
 
 	movieDbIdStr := strconv.Itoa(int(reqDTO.MovieDbId))
 
-	movieCheck, _ := usecase.repository.MovieRepository.GetMovieByMoviDBId(ctx, int(reqDTO.MovieDbId))
+	movieCheck, _ := usecase.repositories.MovieRepository.GetMovieByMoviDBId(ctx, int(reqDTO.MovieDbId))
 	if movieCheck != nil {
 		return nil, errors.New(constants.RESOURCE_EXISTS + "movie-" + movieDbIdStr)
 	}
 
 	// getMovieInfo
-	movieInfo, err := usecase.service.TheMovieDbService.GetMovieInfoFromAPI(c, movieDbIdStr)
+	movieInfo, err := usecase.services.TheMovieDbService.GetMovieInfoFromAPI(c, movieDbIdStr)
 	if err != nil {
 		return nil, err
 	}
 
 	// Add movie
-	addedMovieId, err := usecase.repository.MovieRepository.AddMovie(ctx, movieInfo)
+	addedMovieId, err := usecase.repositories.MovieRepository.AddMovie(ctx, movieInfo)
 	if err != nil {
 		return nil, err
 	}
 
 	// Retrieve movie info from DB
-	addedMovie, err := usecase.repository.MovieRepository.GetMovieById(ctx, *addedMovieId)
+	addedMovie, err := usecase.repositories.MovieRepository.GetMovieById(ctx, *addedMovieId)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +144,7 @@ func (usecase MovieUsecase) DeleteMovieById(c *gin.Context, movieId string) (*pr
 		return nil, errors.New(constants.BAD_PARAMS + "movieId")
 	}
 
-	err = usecase.repository.MovieRepository.DeleteMovieById(ctx, movieUUID)
+	err = usecase.repositories.MovieRepository.DeleteMovieById(ctx, movieUUID)
 	if err != nil {
 		return nil, err
 	}

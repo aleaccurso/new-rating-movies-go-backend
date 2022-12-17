@@ -16,4 +16,5 @@ type IMovieRepository interface {
 	ModifyMovieById(context context.Context, movie models.Movie) error
 	DeleteMovieById(context context.Context, movieId primitive.ObjectID) error
 	CountMovies(context context.Context) (*int64, error)
+	GetUserFavoriteMovies(context context.Context, userFavorites []int32, page int, size int) ([]models.Movie, error)
 }

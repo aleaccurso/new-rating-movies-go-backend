@@ -16,12 +16,12 @@ import (
 )
 
 type UserUsecase struct {
-	repository repositories.Repository
+	repositories repositories.Repository
 }
 
-func InitialiseUserUsecase(repository repositories.Repository) UserUsecase {
+func InitialiseUserUsecase(repositories repositories.Repository) UserUsecase {
 	return UserUsecase{
-		repository: repository,
+		repositories: repositories,
 	}
 }
 
@@ -31,15 +31,21 @@ func (usecase UserUsecase) GetUsers(c *gin.Context, page string, size string) (*
 
 	pageInt, err := strconv.Atoi(page)
 	if err != nil {
-		return nil, errors.New(constants.BAD_PARAMS + "page")
+		return nil, errors.New(constants.BAD_PARAMS + page)
+	}
+	if pageInt <= 0 {
+		pageInt = 1
 	}
 
 	sizeInt, err := strconv.Atoi(size)
 	if err != nil {
-		return nil, errors.New(constants.BAD_PARAMS + "size")
+		return nil, errors.New(constants.BAD_PARAMS + size)
+	}
+	if sizeInt <= 0 {
+		sizeInt = 8
 	}
 
-	usersCount, err := usecase.repository.UserRepository.CountUsers(ctx)
+	usersCount, err := usecase.repositories.UserRepository.CountUsers(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +56,8 @@ func (usecase UserUsecase) GetUsers(c *gin.Context, page string, size string) (*
 		nbPages = 1
 	}
 
-	if float64(pageInt) >= nbPages-1 {
-		pageInt = int(nbPages - 1)
+	if float64(pageInt) > nbPages-1 {
+		pageInt = int(nbPages)
 	}
 
 	pagingUsers := dtos.UserPagingResDTO{
@@ -61,7 +67,7 @@ func (usecase UserUsecase) GetUsers(c *gin.Context, page string, size string) (*
 		NbResults: int16(*usersCount),
 	}
 
-	users, err := usecase.repository.UserRepository.GetUsers(ctx, pageInt, sizeInt)
+	users, err := usecase.repositories.UserRepository.GetUsers(ctx, pageInt, sizeInt)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +96,7 @@ func (usecase UserUsecase) GetUserById(c *gin.Context, userId string) (*dtos.Use
 		return nil, errors.New(constants.BAD_PARAMS + "userId")
 	}
 
-	user, err := usecase.repository.UserRepository.GetUserById(ctx, userUUID)
+	user, err := usecase.repositories.UserRepository.GetUserById(ctx, userUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +128,7 @@ func (usecase UserUsecase) GetUserByEmail(c *gin.Context, email string) (*dtos.U
 		return nil, errors.New(constants.BAD_DATA + "email")
 	}
 
-	user, err := usecase.repository.UserRepository.GetUserByEmail(ctx, email)
+	user, err := usecase.repositories.UserRepository.GetUserByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +163,7 @@ func (usecase UserUsecase) UpdateUserById(c *gin.Context, userId string, reqUpda
 
 	userNewInfo := mappers.UserReqUpdateDTOToModel(reqUpdateDTO)
 
-	existinguser, err := usecase.repository.UserRepository.GetUserById(ctx, userUUID)
+	existinguser, err := usecase.repositories.UserRepository.GetUserById(ctx, userUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -169,12 +175,12 @@ func (usecase UserUsecase) UpdateUserById(c *gin.Context, userId string, reqUpda
 	userNewInfo.Id = existinguser.Id
 	userNewInfo.CreatedAt = existinguser.CreatedAt
 
-	err = usecase.repository.UserRepository.ModifyUserById(ctx, userNewInfo)
+	err = usecase.repositories.UserRepository.ModifyUserById(ctx, userNewInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	updatedUser, err := usecase.repository.UserRepository.GetUserById(ctx, userUUID)
+	updatedUser, err := usecase.repositories.UserRepository.GetUserById(ctx, userUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +213,7 @@ func (usecase UserUsecase) DeleteUserById(c *gin.Context, userId string) (*primi
 		return nil, errors.New(constants.BAD_PARAMS + "userId")
 	}
 
-	user, err := usecase.repository.UserRepository.GetUserById(ctx, userUUID)
+	user, err := usecase.repositories.UserRepository.GetUserById(ctx, userUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +222,7 @@ func (usecase UserUsecase) DeleteUserById(c *gin.Context, userId string) (*primi
 		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
 	}
 
-	err = usecase.repository.UserRepository.DeleteUserById(ctx, user.Id)
+	err = usecase.repositories.UserRepository.DeleteUserById(ctx, user.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +253,7 @@ func (usecase UserUsecase) ToggleUserFavorite(c *gin.Context, userId string, mov
 		return nil, errors.New("cannot get logged user role")
 	}
 
-	user, err := usecase.repository.UserRepository.GetUserById(ctx, userUUID)
+	user, err := usecase.repositories.UserRepository.GetUserById(ctx, userUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +264,7 @@ func (usecase UserUsecase) ToggleUserFavorite(c *gin.Context, userId string, mov
 
 	user.Favorites = usecase.updateUserFavoriteList(user.Favorites, int32(movieDbIdInt))
 
-	err = usecase.repository.UserRepository.ModifyUserById(ctx, *user)
+	err = usecase.repositories.UserRepository.ModifyUserById(ctx, *user)
 	if err != nil {
 		return nil, err
 	}
@@ -266,6 +272,81 @@ func (usecase UserUsecase) ToggleUserFavorite(c *gin.Context, userId string, mov
 	userDTO := mappers.UserModelToResDTO(*user)
 
 	return &userDTO, nil
+}
+
+func (usecase UserUsecase) GetUserFavoriteMovies(c *gin.Context, userId string, page string, size string) (*dtos.MoviePagingResDTO, error) {
+	ctx := context.TODO()
+		
+	userUUID, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		return nil, errors.New(constants.BAD_PARAMS + userId)
+	}
+
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
+		return nil, errors.New(constants.BAD_PARAMS + page)
+	}
+
+	if pageInt <= 0 {
+		pageInt = 1
+	}
+
+	sizeInt, err := strconv.Atoi(size)
+	if err != nil {
+		return nil, errors.New(constants.BAD_PARAMS + size)
+	}
+	if sizeInt <= 0 {
+		sizeInt = 8
+	}
+
+	loggedUserEmail, ok := c.Get("user_email")
+	if !ok {
+		return nil, errors.New(constants.AUTH_UNVERIFIED_EMAIL)
+	}
+
+	loggedUserRole, ok := c.Get("user_role")
+	if !ok {
+		return nil, errors.New("cannot get logged user role")
+	}
+
+	user, err := usecase.repositories.UserRepository.GetUserById(ctx, userUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	if user.Email != loggedUserEmail && loggedUserRole != "admin" {
+		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
+	}
+
+	nbPages := math.Ceil(float64(len(user.Favorites)) / float64(sizeInt))
+
+	if nbPages == 0 {
+		nbPages = 1
+	}
+
+	if float64(pageInt) >= nbPages-1 {
+		pageInt = int(nbPages)
+	}
+
+	pagingMovies := dtos.MoviePagingResDTO{
+		Page:      int8(pageInt),
+		Size:      int8(sizeInt),
+		NbPages:   int8(nbPages),
+		NbResults: int16(len(user.Favorites)),
+	}
+
+	userFavoriteMovies, err := usecase.repositories.MovieRepository.GetUserFavoriteMovies(ctx, user.Favorites, pageInt, sizeInt)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(user.Favorites) != len(userFavoriteMovies) {
+		return nil, errors.New(constants.UNABLE_TO_DO_ACTION+"get-favorites")
+	}
+
+	pagingMovies.Data = mappers.MovieModelsToResDTOs(userFavoriteMovies)
+
+	return &pagingMovies, nil
 }
 
 func (usecase UserUsecase) updateUserFavoriteList(favorites []int32, movieDbId int32) []int32 {
