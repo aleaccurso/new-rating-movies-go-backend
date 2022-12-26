@@ -53,6 +53,7 @@ func (router Router) Run() error {
 	api.DELETE("/users/:userId", router.authMiddleware.Authorize(router.controller.UserController.DeleteUserById))
 	api.GET("/users/:userId/favorites", router.authMiddleware.Authorize(router.controller.UserController.GetUserFavoriteMovies))
 	api.POST("/users/:userId/favorites/:movieDbId", router.authMiddleware.Authorize(router.controller.UserController.ToggleUserFavorite))
+	api.PATCH("/users/:userId/rates", router.authMiddleware.Authorize(router.controller.UserController.UpdateUserRate))
 
 	// Movie
 	api.GET("/movies", router.controller.MovieController.GetMovies)

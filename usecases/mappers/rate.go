@@ -21,3 +21,17 @@ func rateModelsToResDtos(models []models.UserRate) []dtos.RateResDTO {
 
 	return dtos
 }
+
+func RateReqUpdateDTOToModel(dto dtos.UserRateReqUpdateDTO) models.UserRate {
+	return models.UserRate{
+		MovieDbId: dto.MovieDbId,
+		UserRate:  dto.Rate,
+	}
+}
+
+func RateReqUpdateDTOToRateResDTO(reqDTO dtos.UserRateReqUpdateDTO) dtos.RateResDTO {
+	return dtos.RateResDTO{
+		MovieDbId: reqDTO.MovieDbId,
+		Rate:  reqDTO.Rate,
+	}
+}

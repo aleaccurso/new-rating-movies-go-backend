@@ -6,6 +6,7 @@ import (
 	"math"
 	"new-rating-movies-go-backend/constants"
 	"new-rating-movies-go-backend/dtos"
+	"new-rating-movies-go-backend/helpers"
 	"new-rating-movies-go-backend/repositories"
 	"new-rating-movies-go-backend/usecases/mappers"
 	"new-rating-movies-go-backend/utils"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserUsecase struct {
@@ -81,16 +83,6 @@ func (usecase UserUsecase) GetUserById(c *gin.Context, userId string) (*dtos.Use
 
 	ctx := context.TODO()
 
-	loggedUserEmail, ok := c.Get("user_email")
-	if !ok {
-		return nil, errors.New(constants.AUTH_UNVERIFIED_EMAIL)
-	}
-
-	loggedUserRole, ok := c.Get("user_role")
-	if !ok {
-		return nil, errors.New("cannot get logged user role")
-	}
-
 	userUUID, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		return nil, errors.New(constants.BAD_PARAMS + "userId")
@@ -101,8 +93,9 @@ func (usecase UserUsecase) GetUserById(c *gin.Context, userId string) (*dtos.Use
 		return nil, err
 	}
 
-	if user.Email != loggedUserEmail && loggedUserRole != "admin" {
-		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
+	err = helpers.IsLoggedUserOrAdmin(c, userUUID, *user)
+	if err != nil {
+		return nil, err
 	}
 
 	userDTO := mappers.UserModelToResDTO(*user)
@@ -146,16 +139,6 @@ func (usecase UserUsecase) UpdateUserById(c *gin.Context, userId string, reqUpda
 
 	ctx := context.TODO()
 
-	loggedUserEmail, ok := c.Get("user_email")
-	if !ok {
-		return nil, errors.New(constants.AUTH_UNVERIFIED_EMAIL)
-	}
-
-	loggedUserRole, ok := c.Get("user_role")
-	if !ok {
-		return nil, errors.New("cannot get logged user role")
-	}
-
 	userUUID, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		return nil, errors.New(constants.BAD_PARAMS + "userId")
@@ -168,12 +151,22 @@ func (usecase UserUsecase) UpdateUserById(c *gin.Context, userId string, reqUpda
 		return nil, err
 	}
 
-	if existinguser.Email != loggedUserEmail && loggedUserRole != "admin" {
-		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
+	err = helpers.IsLoggedUserOrAdmin(c, userUUID, *existinguser)
+	if err != nil {
+		return nil, err
 	}
 
 	userNewInfo.Id = existinguser.Id
 	userNewInfo.CreatedAt = existinguser.CreatedAt
+	userNewInfo.Password = existinguser.Password
+
+	if reqUpdateDTO.Password != "" {
+		hashedNewPassword, err := bcrypt.GenerateFromPassword([]byte(reqUpdateDTO.Password), 14)
+		if err != nil {
+			return nil, errors.New(constants.AUTH_UNABLE_TO_HASH_PASSWORD)
+		}
+		userNewInfo.Password = string(hashedNewPassword)
+	}
 
 	err = usecase.repositories.UserRepository.ModifyUserById(ctx, userNewInfo)
 	if err != nil {
@@ -198,16 +191,6 @@ func (usecase UserUsecase) DeleteUserById(c *gin.Context, userId string) (*primi
 
 	ctx := context.TODO()
 
-	loggedUserEmail, ok := c.Get("user_email")
-	if !ok {
-		return nil, errors.New(constants.AUTH_UNVERIFIED_EMAIL)
-	}
-
-	loggedUserRole, ok := c.Get("user_role")
-	if !ok {
-		return nil, errors.New("cannot get logged user role")
-	}
-
 	userUUID, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		return nil, errors.New(constants.BAD_PARAMS + "userId")
@@ -218,8 +201,9 @@ func (usecase UserUsecase) DeleteUserById(c *gin.Context, userId string) (*primi
 		return nil, err
 	}
 
-	if user.Email != loggedUserEmail && loggedUserRole != "admin" {
-		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
+	err = helpers.IsLoggedUserOrAdmin(c, userUUID, *user)
+	if err != nil {
+		return nil, err
 	}
 
 	err = usecase.repositories.UserRepository.DeleteUserById(ctx, user.Id)
@@ -243,23 +227,14 @@ func (usecase UserUsecase) ToggleUserFavorite(c *gin.Context, userId string, mov
 		return nil, errors.New(constants.BAD_PARAMS + userId)
 	}
 
-	loggedUserEmail, ok := c.Get("user_email")
-	if !ok {
-		return nil, errors.New(constants.AUTH_UNVERIFIED_EMAIL)
-	}
-
-	loggedUserRole, ok := c.Get("user_role")
-	if !ok {
-		return nil, errors.New("cannot get logged user role")
-	}
-
 	user, err := usecase.repositories.UserRepository.GetUserById(ctx, userUUID)
 	if err != nil {
 		return nil, err
 	}
 
-	if user.Email != loggedUserEmail && loggedUserRole != "admin" {
-		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
+	err = helpers.IsLoggedUserOrAdmin(c, userUUID, *user)
+	if err != nil {
+		return nil, err
 	}
 
 	user.Favorites = usecase.updateUserFavoriteList(user.Favorites, int32(movieDbIdInt))
@@ -276,7 +251,7 @@ func (usecase UserUsecase) ToggleUserFavorite(c *gin.Context, userId string, mov
 
 func (usecase UserUsecase) GetUserFavoriteMovies(c *gin.Context, userId string, page string, size string) (*dtos.MoviePagingResDTO, error) {
 	ctx := context.TODO()
-		
+
 	userUUID, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		return nil, errors.New(constants.BAD_PARAMS + userId)
@@ -299,23 +274,14 @@ func (usecase UserUsecase) GetUserFavoriteMovies(c *gin.Context, userId string, 
 		sizeInt = 8
 	}
 
-	loggedUserEmail, ok := c.Get("user_email")
-	if !ok {
-		return nil, errors.New(constants.AUTH_UNVERIFIED_EMAIL)
-	}
-
-	loggedUserRole, ok := c.Get("user_role")
-	if !ok {
-		return nil, errors.New("cannot get logged user role")
-	}
-
 	user, err := usecase.repositories.UserRepository.GetUserById(ctx, userUUID)
 	if err != nil {
 		return nil, err
 	}
 
-	if user.Email != loggedUserEmail && loggedUserRole != "admin" {
-		return nil, errors.New(constants.AUTH_UNAUTHORIZED)
+	err = helpers.IsLoggedUserOrAdmin(c, userUUID, *user)
+	if err != nil {
+		return nil, err
 	}
 
 	nbPages := math.Ceil(float64(len(user.Favorites)) / float64(sizeInt))
@@ -341,7 +307,7 @@ func (usecase UserUsecase) GetUserFavoriteMovies(c *gin.Context, userId string, 
 	}
 
 	if len(user.Favorites) != len(userFavoriteMovies) {
-		return nil, errors.New(constants.UNABLE_TO_DO_ACTION+"get-favorites")
+		return nil, errors.New(constants.UNABLE_TO_DO_ACTION + "get-favorites")
 	}
 
 	pagingMovies.Data = mappers.MovieModelsToResDTOs(userFavoriteMovies)
@@ -364,4 +330,45 @@ func (usecase UserUsecase) updateUserFavoriteList(favorites []int32, movieDbId i
 	}
 
 	return append(toReturn, movieDbId)
+}
+
+func (usecase UserUsecase) UpdateUserRate(c *gin.Context, userId string, vote dtos.UserRateReqUpdateDTO) (*dtos.RateResDTO, error) {
+
+	ctx := context.TODO()
+
+	userUUID, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		return nil, errors.New(constants.BAD_PARAMS + userId)
+	}
+
+	user, err := usecase.repositories.UserRepository.GetUserById(ctx, userUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = helpers.IsLoggedUserOrAdmin(c, userUUID, *user)
+	if err != nil {
+		return nil, err
+	}
+
+	index := utils.IndexOfRate(user.Rates, vote.MovieDbId)
+
+	if index >= 0 {
+		if vote.Rate == 0 {
+			user.Rates = append(user.Rates[:index], user.Rates[index+1:]...)
+		} else {
+			user.Rates[index] = mappers.RateReqUpdateDTOToModel(vote)
+		}
+	} else {
+		user.Rates = append(user.Rates, mappers.RateReqUpdateDTOToModel(vote))
+	}
+
+	err = usecase.repositories.UserRepository.ModifyUserById(ctx, *user)
+	if err != nil {
+		return nil, err
+	}
+
+	rateDTO := mappers.RateReqUpdateDTOToRateResDTO(vote)
+
+	return &rateDTO, nil
 }

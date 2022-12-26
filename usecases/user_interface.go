@@ -15,4 +15,5 @@ type IUserUsecase interface {
 	DeleteUserById(c *gin.Context, userId string) (*primitive.ObjectID, error)
 	ToggleUserFavorite(c *gin.Context, userId string, movieDbId string) (*dtos.UserResDTO, error)
 	GetUserFavoriteMovies(c *gin.Context, userId string, page string, size string) (*dtos.MoviePagingResDTO, error)
+	UpdateUserRate(c *gin.Context, userId string, vote dtos.UserRateReqUpdateDTO) (*dtos.RateResDTO, error)
 }

@@ -138,3 +138,21 @@ func (controller UserController) ToggleUserFavorite(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, userDTO)
 }
+
+func (controller UserController) UpdateUserRate(c *gin.Context) {
+	userId := c.Param("userId")
+
+	var userRateReqUpdateDTO dtos.UserRateReqUpdateDTO
+	if err := c.ShouldBindJSON(&userRateReqUpdateDTO); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	userRate, err := controller.usecases.UserUsecase.UpdateUserRate(c, userId, userRateReqUpdateDTO)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, userRate)
+}
